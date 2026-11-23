@@ -47,23 +47,61 @@ const groupedChapters = computed(() => {
     .filter((ch) => ch.items.length > 0)
 })
 
-let observer: IntersectionObserver | null = null
+let scrollRaf: number | null = null
+let lockActiveUntil = 0
+let correctionTimers: number[] = []
 
-function setupObserver() {
-  observer?.disconnect()
-  observer = new IntersectionObserver(
-    (entries) => {
-      const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
-      if (visible[0]) activeId.value = Number(visible[0].target.id)
-    },
-    { rootMargin: '-96px 0px -65% 0px', threshold: 0 },
-  )
-  document.querySelectorAll<HTMLElement>('[data-question-card]').forEach((el) => observer?.observe(el))
+function clearCorrectionTimers() {
+  correctionTimers.forEach((t) => window.clearTimeout(t))
+  correctionTimers = []
+}
+
+function getStickyOffset(): number {
+  // 顶栏 (56/64px) + 吸顶工具栏 (~54px) + 12px 呼吸间距
+  return window.innerWidth >= 1024 ? 130 : 122
+}
+
+function updateActiveQuestionFromScroll() {
+  if (Date.now() < lockActiveUntil) return
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-question-card]'))
+  if (!cards.length) return
+
+  const threshold = getStickyOffset() + 36
+  let current = cards[0]!
+  for (const card of cards) {
+    const rect = card.getBoundingClientRect()
+    if (rect.top <= threshold) {
+      current = card
+    } else {
+      break
+    }
+  }
+  const id = Number(current.id)
+  if (!Number.isNaN(id)) {
+    activeId.value = id
+  }
+}
+
+function onWindowScroll() {
+  if (scrollRaf !== null) return
+  scrollRaf = window.requestAnimationFrame(() => {
+    scrollRaf = null
+    updateActiveQuestionFromScroll()
+  })
+}
+
+function onUserWheelOrTouch() {
+  // 用户主动滚轮或触摸滚动时，立即解除目录点击跳转的校准锁
+  if (correctionTimers.length) {
+    clearCorrectionTimers()
+    lockActiveUntil = 0
+  }
 }
 
 async function loadModule(slug: string) {
   loading.value = true
   loadError.value = ''
+  clearCorrectionTimers()
   revealedIds.value = new Set()
   expandedAnimIds.value = new Set()
   ui.setLastSlug(slug)
@@ -74,7 +112,6 @@ async function loadModule(slug: string) {
     questions.value = res.questions
     activeId.value = res.questions[0]?.id ?? null
     await nextTick()
-    setupObserver()
 
     const targetIdStr = (route.query.q as string) || (route.hash ? route.hash.slice(1) : '')
     if (targetIdStr) {
@@ -83,13 +120,11 @@ async function loadModule(slug: string) {
         if (hideAnswers.value) revealedIds.value.add(id)
         expandedAnimIds.value.add(id)
         await nextTick()
-        const target = document.getElementById(String(id))
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          activeId.value = id
-        }
+        scrollToQuestion(id, false)
+        return
       }
     }
+    updateActiveQuestionFromScroll()
   } catch (e) {
     loadError.value = (e as Error).message || '加载章节内容失败，请检查网络连接'
   } finally {
@@ -106,15 +141,22 @@ function onKeydown(e: KeyboardEvent) {
 onMounted(() => {
   loadModule(currentSlug.value)
   window.addEventListener('keydown', onKeydown)
+  window.addEventListener('scroll', onWindowScroll, { passive: true })
+  window.addEventListener('wheel', onUserWheelOrTouch, { passive: true })
+  window.addEventListener('touchmove', onUserWheelOrTouch, { passive: true })
 })
 watch(currentSlug, (slug) => loadModule(slug))
 watch(p0Only, async () => {
   await nextTick()
-  setupObserver()
+  updateActiveQuestionFromScroll()
 })
 onBeforeUnmount(() => {
-  observer?.disconnect()
+  clearCorrectionTimers()
+  if (scrollRaf !== null) window.cancelAnimationFrame(scrollRaf)
   window.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('scroll', onWindowScroll)
+  window.removeEventListener('wheel', onUserWheelOrTouch)
+  window.removeEventListener('touchmove', onUserWheelOrTouch)
 })
 
 function isAnswerShown(id: number) {
@@ -139,13 +181,38 @@ function toggleAnim(id: number) {
   expandedAnimIds.value = next
 }
 
-function scrollToQuestion(id: number) {
-  tocDrawerOpen.value = false
+function alignElementToTop(id: number, behavior: ScrollBehavior) {
   const el = document.getElementById(String(id))
-  if (el) {
-    const top = el.getBoundingClientRect().top + window.scrollY - 124
-    window.scrollTo({ top, behavior: 'smooth' })
-    activeId.value = id
+  if (!el) return
+  const offset = getStickyOffset()
+  const delta = el.getBoundingClientRect().top - offset
+  if (Math.abs(delta) > 4) {
+    window.scrollTo({
+      top: Math.max(0, window.scrollY + delta),
+      behavior,
+    })
+  }
+}
+
+function scrollToQuestion(id: number, smooth = true) {
+  tocDrawerOpen.value = false
+  clearCorrectionTimers()
+
+  const el = document.getElementById(String(id))
+  if (!el) return
+
+  activeId.value = id
+  lockActiveUntil = Date.now() + 950
+
+  alignElementToTop(id, smooth ? 'smooth' : 'auto')
+
+  // 滚动途中上方题目若有懒加载图片 (loading="lazy") 展开撑高页面，分阶段自动校准到精确位置
+  for (const delay of [180, 380, 620, 880]) {
+    const timer = window.setTimeout(() => {
+      alignElementToTop(id, 'auto')
+      activeId.value = id
+    }, delay)
+    correctionTimers.push(timer)
   }
 }
 
