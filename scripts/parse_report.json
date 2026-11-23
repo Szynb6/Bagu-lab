@@ -1,0 +1,83 @@
+[
+  {
+    "slug": "01-jvm",
+    "questions": 64,
+    "P0": 24,
+    "P1": 24,
+    "P2": 16,
+    "images": 18,
+    "chapters": 5
+  },
+  {
+    "slug": "02-concurrency",
+    "questions": 48,
+    "P0": 22,
+    "P1": 17,
+    "P2": 9,
+    "images": 13,
+    "chapters": 5
+  },
+  {
+    "slug": "03-java-basics",
+    "questions": 90,
+    "P0": 29,
+    "P1": 30,
+    "P2": 31,
+    "images": 29,
+    "chapters": 5
+  },
+  {
+    "slug": "04-spring-mybatis",
+    "questions": 39,
+    "P0": 18,
+    "P1": 13,
+    "P2": 8,
+    "images": 15,
+    "chapters": 4
+  },
+  {
+    "slug": "05-mysql",
+    "questions": 48,
+    "P0": 22,
+    "P1": 16,
+    "P2": 10,
+    "images": 9,
+    "chapters": 5
+  },
+  {
+    "slug": "06-redis",
+    "questions": 22,
+    "P0": 13,
+    "P1": 7,
+    "P2": 2,
+    "images": 8,
+    "chapters": 4
+  },
+  {
+    "slug": "07-design-patterns",
+    "questions": 15,
+    "P0": 5,
+    "P1": 10,
+    "P2": 0,
+    "images": 0,
+    "chapters": 4
+  },
+  {
+    "slug": "08-network",
+    "questions": 24,
+    "P0": 13,
+    "P1": 8,
+    "P2": 3,
+    "images": 5,
+    "chapters": 4
+  },
+  {
+    "slug": "09-os",
+    "questions": 25,
+    "P0": 14,
+    "P1": 8,
+    "P2": 3,
+    "images": 5,
+    "chapters": 4
+  }
+]

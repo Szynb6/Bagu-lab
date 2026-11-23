@@ -1,0 +1,156 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-ink-950: #0b1120;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-ink-950 dark:text-slate-100;
+  font-family: var(--font-sans);
+}
+
+::selection {
+  @apply bg-brand-500/25;
+}
+
+/* 细滚动条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.4) transparent;
+}
+
+/* 通用卡片 */
+.card {
+  @apply rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+}
+.btn-primary {
+  @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700;
+}
+.btn-ghost {
+  @apply btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+}
+.kbd {
+  @apply inline-flex min-w-5 items-center justify-center rounded-md border border-slate-300 bg-slate-100 px-1.5 font-mono text-[11px] leading-5 text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400;
+}
+
+mark {
+  @apply rounded bg-amber-200/70 px-0.5 text-inherit dark:bg-amber-500/30;
+}
+
+/* ---------------------------------------------------------------- */
+/* Markdown 答案排版                                                  */
+/* ---------------------------------------------------------------- */
+.md {
+  @apply text-[15.5px] leading-[1.8] text-slate-700 dark:text-slate-300;
+  word-break: break-word;
+}
+.md > * + * {
+  margin-top: 0.85em;
+}
+.md h4 {
+  @apply mt-6 flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-slate-100;
+}
+.md h4::before {
+  content: '';
+  @apply inline-block h-4 w-1 rounded-full bg-brand-500;
+}
+.md .sub-point {
+  @apply mt-5 font-semibold text-slate-900 dark:text-slate-100;
+}
+.md .sub-point::before {
+  content: '▸ ';
+  @apply text-brand-500;
+}
+.md strong {
+  @apply font-semibold text-slate-900 dark:text-white;
+}
+.md ul {
+  @apply list-disc space-y-1.5 pl-5 marker:text-slate-400;
+}
+.md ol {
+  @apply list-decimal space-y-1.5 pl-5;
+}
+.md :not(pre) > code {
+  @apply rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[0.86em] text-rose-600 dark:bg-slate-800 dark:text-rose-300;
+}
+.md blockquote {
+  @apply rounded-xl border-l-4 border-brand-500 bg-brand-50/70 px-4 py-3 text-[14.5px] text-slate-700 dark:bg-brand-500/10 dark:text-slate-300;
+}
+.md img {
+  @apply mx-auto max-h-[440px] cursor-zoom-in rounded-xl border border-slate-200 bg-white object-contain transition hover:shadow-lg dark:border-slate-700;
+}
+.md .img-caption {
+  @apply -mt-1 text-center text-xs text-slate-500 dark:text-slate-400;
+}
+.md .table-wrap {
+  @apply relative overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700;
+}
+.md table {
+  @apply w-full border-collapse text-[14px];
+}
+.md th {
+  @apply whitespace-nowrap bg-slate-100 px-3 py-2.5 text-left font-semibold text-slate-800 dark:bg-slate-800 dark:text-slate-100;
+}
+.md td {
+  @apply min-w-[120px] border-t border-slate-200 px-3 py-2.5 align-top dark:border-slate-700;
+}
+.md tbody tr:nth-child(even) {
+  @apply bg-slate-50/70 dark:bg-slate-800/40;
+}
+
+/* 代码块 */
+.md .code-block {
+  @apply relative overflow-hidden rounded-xl border border-slate-200 bg-[#f8fafc] dark:border-slate-700 dark:bg-[#0d1424];
+}
+.md .code-block .code-head {
+  @apply flex items-center justify-between border-b border-slate-200 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-slate-400 dark:border-slate-700;
+}
+.md .code-block .copy-btn {
+  @apply rounded-md px-2 py-0.5 normal-case tracking-normal text-slate-500 hover:bg-slate-200 hover:text-slate-800 dark:hover:bg-slate-700 dark:hover:text-slate-100;
+}
+.md pre {
+  @apply overflow-x-auto px-4 py-3 font-mono text-[13px] leading-relaxed;
+}
+
+/* highlight.js 浅色 / 深色 token */
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in { color: #7c3aed; }
+.hljs-string, .hljs-attr-value, .hljs-regexp { color: #059669; }
+.hljs-comment, .hljs-quote { color: #94a3b8; font-style: italic; }
+.hljs-number, .hljs-literal { color: #d97706; }
+.hljs-title, .hljs-title.function_, .hljs-section { color: #2563eb; }
+.hljs-type, .hljs-title.class_ { color: #db2777; }
+.hljs-meta, .hljs-annotation { color: #0891b2; }
+.hljs-attr, .hljs-variable, .hljs-params { color: #475569; }
+.dark .hljs-keyword, .dark .hljs-selector-tag, .dark .hljs-built_in { color: #c4b5fd; }
+.dark .hljs-string, .dark .hljs-attr-value, .dark .hljs-regexp { color: #6ee7b7; }
+.dark .hljs-comment, .dark .hljs-quote { color: #64748b; }
+.dark .hljs-number, .dark .hljs-literal { color: #fbbf24; }
+.dark .hljs-title, .dark .hljs-title.function_, .dark .hljs-section { color: #93c5fd; }
+.dark .hljs-type, .dark .hljs-title.class_ { color: #f9a8d4; }
+.dark .hljs-meta, .dark .hljs-annotation { color: #67e8f9; }
+.dark .hljs-attr, .dark .hljs-variable, .dark .hljs-params { color: #cbd5e1; }
+
+/* 过渡 */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.18s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+.slide-up-enter-active, .slide-up-leave-active { transition: all 0.22s ease; }
+.slide-up-enter-from, .slide-up-leave-to { opacity: 0; transform: translateY(12px); }
+
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }

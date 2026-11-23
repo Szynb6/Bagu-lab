@@ -1,0 +1,8 @@
+# 开发环境配置（本地通过 SSH 隧道连接 59.110.124.170 的 PG17 / Redis / RustFS）
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.bagu: debug

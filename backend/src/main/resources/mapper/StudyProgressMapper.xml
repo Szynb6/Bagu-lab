@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bagu.mapper.StudyProgressMapper">
+
+    <select id="selectUserModuleStats" resultType="java.util.HashMap">
+        SELECT
+            q.module_id,
+            COUNT(*) FILTER (WHERE sp.status = 3)                                                AS mastered,
+            COUNT(*) FILTER (WHERE q.priority = 'P0' AND sp.status = 3)                          AS p0_mastered,
+            COUNT(*) FILTER (WHERE sp.status IS NOT NULL AND sp.status &gt; 0)                   AS learned,
+            COUNT(*) FILTER (WHERE sp.next_review_at IS NOT NULL AND sp.next_review_at &lt;= #{endOfToday}) AS due,
+            COUNT(*) FILTER (WHERE sp.status = 1)                                                AS mistakes
+        FROM study_progress sp
+        INNER JOIN kb_question q ON q.id = sp.question_id AND q.is_deleted = FALSE
+        WHERE sp.user_id = #{userId}
+        GROUP BY q.module_id
+    </select>
+
+    <select id="selectDueQuestionIds" resultType="java.lang.Long">
+        SELECT sp.question_id
+        FROM study_progress sp
+        INNER JOIN kb_question q ON q.id = sp.question_id AND q.is_deleted = FALSE
+        WHERE sp.user_id = #{userId}
+          AND sp.next_review_at IS NOT NULL
+          AND sp.next_review_at &lt;= #{endOfToday}
+        ORDER BY sp.next_review_at ASC, sp.question_id ASC
+    </select>
+
+    <select id="selectNewQuestionIdsForToday" resultType="java.lang.Long">
+        SELECT q.id
+        FROM kb_question q
+        INNER JOIN kb_module m ON m.id = q.module_id
+        LEFT JOIN study_progress sp ON sp.question_id = q.id AND sp.user_id = #{userId}
+        WHERE q.is_deleted = FALSE
+          AND (sp.id IS NULL OR sp.status = 0)
+        ORDER BY
+            CASE q.priority WHEN 'P0' THEN 0 WHEN 'P1' THEN 1 ELSE 2 END ASC,
+            m.sort_order ASC,
+            q.sort_order ASC,
+            q.id ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectP0UnmasteredQuestionIds" resultType="java.lang.Long">
+        SELECT q.id
+        FROM kb_question q
+        INNER JOIN kb_module m ON m.id = q.module_id
+        LEFT JOIN study_progress sp ON sp.question_id = q.id AND sp.user_id = #{userId}
+        WHERE q.is_deleted = FALSE
+          AND q.priority = 'P0'
+          AND (sp.id IS NULL OR sp.status &lt;&gt; 3)
+        ORDER BY m.sort_order ASC, q.sort_order ASC, q.id ASC
+    </select>
+
+    <select id="selectMistakeQuestionIds" resultType="java.lang.Long">
+        SELECT sp.question_id
+        FROM study_progress sp
+        INNER JOIN kb_question q ON q.id = sp.question_id AND q.is_deleted = FALSE
+        WHERE sp.user_id = #{userId}
+          AND sp.status = 1
+        ORDER BY sp.lapse_count DESC, sp.last_reviewed_at ASC
+    </select>
+
+    <select id="selectStarredQuestionIds" resultType="java.lang.Long">
+        SELECT sp.question_id
+        FROM study_progress sp
+        INNER JOIN kb_question q ON q.id = sp.question_id AND q.is_deleted = FALSE
+        INNER JOIN kb_module m ON m.id = q.module_id
+        WHERE sp.user_id = #{userId}
+          AND sp.is_starred = TRUE
+        ORDER BY m.sort_order ASC, q.sort_order ASC, q.id ASC
+    </select>
+
+</mapper>

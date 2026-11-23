@@ -1,0 +1,97 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bagu-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  config:
+    import:
+      - optional:classpath:application-local.yml
+      - optional:file:./application-local.yml
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+
+  # PostgreSQL 17（方案 A：复用服务器现有 PG17 的独立库 bagu_db）
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:bagu_db}?currentSchema=public&TimeZone=Asia/Shanghai
+    username: ${DB_USER:bagu_user}
+    password: ${DB_PASSWORD:}
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 15000
+
+  # Flyway 数据库迁移（启动时自动执行 db/migration/V*.sql）
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    encoding: UTF-8
+
+  # Redis 7.4（方案 A：独立 database=2）
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:2}
+      timeout: 5s
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
+# MyBatis-Plus
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+
+# Sa-Token（与前端请求头 satoken 对齐，会话持久化到 Redis db=2）
+sa-token:
+  token-name: satoken
+  timeout: 604800                 # 7 天有效
+  active-timeout: 172800          # 48 小时无操作失效，活跃自动续期
+  is-concurrent: true             # 允许 PC + 手机同时登录
+  is-share: false                 # 每次登录生成独立 Token
+  token-style: random-64
+  token-prefix: ""
+  is-log: false
+  alone-redis:
+    # 复用 spring.data.redis (db=2)，仅定制键前缀便于隔离排查
+    is-open: false
+  jwt-secret-key: ""
+
+# 项目自定义配置
+bagu:
+  auth:
+    init-username: ${BAGU_INIT_USERNAME:admin}
+    init-password: ${BAGU_INIT_PASSWORD:123456}
+    init-nickname: ${BAGU_INIT_NICKNAME:博主}
+  rustfs:
+    endpoint: ${RUSTFS_ENDPOINT:http://127.0.0.1:9000}
+    region: ${RUSTFS_REGION:us-east-1}
+    bucket: ${RUSTFS_BUCKET:bagu-images}
+    access-key: ${RUSTFS_ACCESS_KEY:}
+    secret-key: ${RUSTFS_SECRET_KEY:}
+    public-url-prefix: ${RUSTFS_PUBLIC_URL_PREFIX:/images}
+
+# Knife4j / OpenAPI 3
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn

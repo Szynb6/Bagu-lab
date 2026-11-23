@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bagu.mapper.KbQuestionMapper">
+
+    <sql id="questionFilterWhere">
+        WHERE q.is_deleted = FALSE
+        <if test="slug != null and slug != ''">
+            AND m.slug = #{slug}
+        </if>
+        <if test="chapterId != null">
+            AND q.chapter_id = #{chapterId}
+        </if>
+        <if test="priorities != null and priorities.size() > 0">
+            AND q.priority IN
+            <foreach collection="priorities" item="p" open="(" separator="," close=")">
+                #{p}
+            </foreach>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (q.code ILIKE '%' || #{keyword} || '%' OR q.title ILIKE '%' || #{keyword} || '%')
+        </if>
+        <choose>
+            <when test="status == 'new'">
+                AND (sp.id IS NULL OR sp.status = 0)
+            </when>
+            <when test="status == 'weak'">
+                AND sp.status = 1
+            </when>
+            <when test="status == 'reviewing'">
+                AND sp.status = 2
+            </when>
+            <when test="status == 'mastered'">
+                AND sp.status = 3
+            </when>
+            <when test="status == 'starred'">
+                AND sp.is_starred = TRUE
+            </when>
+            <when test="status == 'noted'">
+                AND sp.personal_note IS NOT NULL AND sp.personal_note &lt;&gt; ''
+            </when>
+        </choose>
+    </sql>
+
+    <select id="selectQuestionPage" resultType="com.bagu.dto.knowledge.QuestionItemRow">
+        SELECT
+            q.id,
+            m.slug                               AS module_slug,
+            m.title                              AS module_title,
+            q.chapter_id,
+            q.code,
+            q.priority,
+            q.title,
+            COALESCE(jsonb_array_length(q.images_json), 0) AS image_count,
+            q.has_table,
+            q.has_code,
+            q.sort_order,
+            COALESCE(sp.status, 0)               AS progress_status,
+            COALESCE(sp.lapse_count, 0)          AS lapse_count,
+            sp.next_review_at,
+            COALESCE(sp.is_starred, FALSE)       AS is_starred,
+            (sp.personal_note IS NOT NULL AND sp.personal_note &lt;&gt; '') AS has_note
+        FROM kb_question q
+        INNER JOIN kb_module m ON m.id = q.module_id
+        LEFT JOIN study_progress sp ON sp.question_id = q.id AND sp.user_id = #{userId}
+        <include refid="questionFilterWhere"/>
+        ORDER BY m.sort_order ASC, q.sort_order ASC, q.id ASC
+    </select>
+
+    <select id="selectQuestionIds" resultType="java.lang.Long">
+        SELECT q.id
+        FROM kb_question q
+        INNER JOIN kb_module m ON m.id = q.module_id
+        LEFT JOIN study_progress sp ON sp.question_id = q.id AND sp.user_id = #{userId}
+        <include refid="questionFilterWhere"/>
+        ORDER BY m.sort_order ASC, q.sort_order ASC, q.id ASC
+    </select>
+
+    <select id="selectModuleStats" resultType="java.util.HashMap">
+        SELECT
+            module_id,
+            COUNT(*)                                                        AS question_count,
+            COUNT(*) FILTER (WHERE priority = 'P0')                         AS p0_count,
+            COUNT(*) FILTER (WHERE priority = 'P1')                         AS p1_count,
+            COUNT(*) FILTER (WHERE priority = 'P2')                         AS p2_count,
+            COALESCE(SUM(jsonb_array_length(images_json)), 0)               AS image_count
+        FROM kb_question
+        WHERE is_deleted = FALSE
+        GROUP BY module_id
+    </select>
+
+    <select id="selectChapterQuestionCounts" resultType="java.util.HashMap">
+        SELECT
+            chapter_id,
+            COUNT(*) AS question_count
+        FROM kb_question
+        WHERE is_deleted = FALSE AND chapter_id IS NOT NULL
+        GROUP BY chapter_id
+    </select>
+
+</mapper>

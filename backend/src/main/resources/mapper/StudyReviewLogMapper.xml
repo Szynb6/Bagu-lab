@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bagu.mapper.StudyReviewLogMapper">
+
+    <select id="selectDailyCounts" resultType="java.util.HashMap">
+        SELECT
+            TO_CHAR(reviewed_at AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD') AS day_str,
+            COUNT(*)                                                        AS cnt
+        FROM study_review_log
+        WHERE user_id = #{userId}
+          AND reviewed_at &gt;= #{startTime}
+        GROUP BY day_str
+        ORDER BY day_str ASC
+    </select>
+
+    <select id="countTodayFirstLearned" resultType="int">
+        SELECT COUNT(DISTINCT l.question_id)
+        FROM study_review_log l
+        WHERE l.user_id = #{userId}
+          AND l.reviewed_at &gt;= #{dayStart}
+          AND NOT EXISTS (
+              SELECT 1
+              FROM study_review_log older
+              WHERE older.user_id = l.user_id
+                AND older.question_id = l.question_id
+                AND older.reviewed_at &lt; #{dayStart}
+          )
+    </select>
+
+</mapper>

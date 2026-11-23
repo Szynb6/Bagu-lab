@@ -1,0 +1,12 @@
+# 复制本文件为 application-local.yml 并填入真实密码（application-local.yml 已被 .gitignore 忽略）
+spring:
+  datasource:
+    password: <YOUR_BAGU_PG_PASSWORD>
+  data:
+    redis:
+      password: <YOUR_REDIS_PASSWORD>
+
+bagu:
+  rustfs:
+    access-key: <YOUR_RUSTFS_ACCESS_KEY>
+    secret-key: <YOUR_RUSTFS_SECRET_KEY>
