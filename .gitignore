@@ -1,0 +1,28 @@
+# IDE & Editor
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local secrets & server deployment artifacts
+deploy/.env
+deploy/.env.*
+!deploy/.env.example
+deploy/*.jar
+deploy/*.jar.bak
+deploy/dist/
+deploy/certs/
+
+# Python scripts cache
+__pycache__/
+*.py[cod]
+.venv/
+
+# Logs
+*.log
