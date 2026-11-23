@@ -49,11 +49,13 @@ const groupedChapters = computed(() => {
 
 let scrollRaf: number | null = null
 let lockActiveUntil = 0
-let correctionTimers: number[] = []
+let settleTimer: number | null = null
 
-function clearCorrectionTimers() {
-  correctionTimers.forEach((t) => window.clearTimeout(t))
-  correctionTimers = []
+function clearSettleTimer() {
+  if (settleTimer !== null) {
+    window.clearTimeout(settleTimer)
+    settleTimer = null
+  }
 }
 
 function getStickyOffset(): number {
@@ -91,17 +93,14 @@ function onWindowScroll() {
 }
 
 function onUserWheelOrTouch() {
-  // 用户主动滚轮或触摸滚动时，立即解除目录点击跳转的校准锁
-  if (correctionTimers.length) {
-    clearCorrectionTimers()
-    lockActiveUntil = 0
-  }
+  clearSettleTimer()
+  lockActiveUntil = 0
 }
 
 async function loadModule(slug: string) {
   loading.value = true
   loadError.value = ''
-  clearCorrectionTimers()
+  clearSettleTimer()
   revealedIds.value = new Set()
   expandedAnimIds.value = new Set()
   ui.setLastSlug(slug)
@@ -120,7 +119,7 @@ async function loadModule(slug: string) {
         if (hideAnswers.value) revealedIds.value.add(id)
         expandedAnimIds.value.add(id)
         await nextTick()
-        scrollToQuestion(id, false)
+        scrollToQuestion(id)
         return
       }
     }
@@ -151,7 +150,7 @@ watch(p0Only, async () => {
   updateActiveQuestionFromScroll()
 })
 onBeforeUnmount(() => {
-  clearCorrectionTimers()
+  clearSettleTimer()
   if (scrollRaf !== null) window.cancelAnimationFrame(scrollRaf)
   window.removeEventListener('keydown', onKeydown)
   window.removeEventListener('scroll', onWindowScroll)
@@ -181,39 +180,30 @@ function toggleAnim(id: number) {
   expandedAnimIds.value = next
 }
 
-function alignElementToTop(id: number, behavior: ScrollBehavior) {
-  const el = document.getElementById(String(id))
-  if (!el) return
-  const offset = getStickyOffset()
-  const delta = el.getBoundingClientRect().top - offset
-  if (Math.abs(delta) > 4) {
-    window.scrollTo({
-      top: Math.max(0, window.scrollY + delta),
-      behavior,
-    })
-  }
-}
-
-function scrollToQuestion(id: number, smooth = true) {
+function scrollToQuestion(id: number) {
   tocDrawerOpen.value = false
-  clearCorrectionTimers()
+  clearSettleTimer()
 
   const el = document.getElementById(String(id))
   if (!el) return
 
   activeId.value = id
-  lockActiveUntil = Date.now() + 950
+  lockActiveUntil = Date.now() + 750
 
-  alignElementToTop(id, smooth ? 'smooth' : 'auto')
+  // 全程交由浏览器原生合成器执行丝滑滚动（配合 article 上的 scroll-mt-32 预留吸顶栏高度）
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
-  // 滚动途中上方题目若有懒加载图片 (loading="lazy") 展开撑高页面，分阶段自动校准到精确位置
-  for (const delay of [180, 380, 620, 880]) {
-    const timer = window.setTimeout(() => {
-      alignElementToTop(id, 'auto')
-      activeId.value = id
-    }, delay)
-    correctionTimers.push(timer)
-  }
+  // 仅在平滑滚动完全结束后检查一次：若首屏弱网下仍有大图晚加载造成偏移，再做一次平滑微调，绝不中途打断滚动
+  settleTimer = window.setTimeout(() => {
+    settleTimer = null
+    const target = document.getElementById(String(id))
+    if (!target) return
+    const delta = target.getBoundingClientRect().top - getStickyOffset()
+    if (Math.abs(delta) > 24) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    activeId.value = id
+  }, 680)
 }
 
 function switchModule(e: Event) {
