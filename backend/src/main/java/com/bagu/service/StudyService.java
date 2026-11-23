@@ -291,6 +291,7 @@ public class StudyService {
                             .images(images)
                             .hasTable(Boolean.TRUE.equals(q.getHasTable()))
                             .hasCode(Boolean.TRUE.equals(q.getHasCode()))
+                            .animationKey(q.getAnimationKey())
                             .order(q.getSortOrder())
                             .progress(ProgressVO.from(pMap.get(q.getId()), q.getId()))
                             .build();

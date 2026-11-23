@@ -25,6 +25,7 @@ public class KbQuestion {
     private String tagsJson;
     private Boolean hasTable;
     private Boolean hasCode;
+    private String animationKey;
     private Integer sortOrder;
     private Boolean isDeleted;
     private OffsetDateTime createdAt;

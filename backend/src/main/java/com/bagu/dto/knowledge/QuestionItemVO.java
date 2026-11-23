@@ -23,6 +23,7 @@ public class QuestionItemVO {
     private int imageCount;
     private boolean hasTable;
     private boolean hasCode;
+    private boolean hasAnimation;
     private Integer order;
     private ProgressSummaryVO progress;
 }

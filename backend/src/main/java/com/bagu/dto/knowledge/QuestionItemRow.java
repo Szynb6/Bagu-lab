@@ -20,6 +20,7 @@ public class QuestionItemRow {
     private Integer imageCount;
     private Boolean hasTable;
     private Boolean hasCode;
+    private Boolean hasAnimation;
     private Integer sortOrder;
 
     private Short progressStatus;

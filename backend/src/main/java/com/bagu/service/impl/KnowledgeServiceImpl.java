@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 public class KnowledgeServiceImpl implements KnowledgeService {
 
     private static final String KEY_MODULES_META = "bagu:modules:meta";
-    private static final String KEY_QUESTION_DETAIL_PREFIX = "bagu:q:detail:";
+    private static final String KEY_QUESTION_DETAIL_PREFIX = "bagu:q:detail:v2:";
     private static final Set<String> VALID_PRIORITIES = Set.of("P0", "P1", "P2");
 
     private final KbModuleMapper moduleMapper;
@@ -142,6 +142,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                         .imageCount(row.getImageCount() == null ? 0 : row.getImageCount())
                         .hasTable(Boolean.TRUE.equals(row.getHasTable()))
                         .hasCode(Boolean.TRUE.equals(row.getHasCode()))
+                        .hasAnimation(Boolean.TRUE.equals(row.getHasAnimation()))
                         .order(row.getSortOrder())
                         .progress(ProgressSummaryVO.builder()
                                 .status(row.getProgressStatus() == null ? 0 : row.getProgressStatus().intValue())
@@ -270,6 +271,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 .images(parseJson(q.getImagesJson(), new TypeReference<>() {}, Collections.emptyList()))
                 .hasTable(Boolean.TRUE.equals(q.getHasTable()))
                 .hasCode(Boolean.TRUE.equals(q.getHasCode()))
+                .animationKey(q.getAnimationKey())
                 .order(q.getSortOrder())
                 .progress(progress)
                 .build();

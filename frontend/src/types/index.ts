@@ -83,6 +83,7 @@ export interface QuestionItem {
   imageCount: number
   hasTable: boolean
   hasCode: boolean
+  hasAnimation?: boolean
   order: number
   progress: ProgressSummary
 }
@@ -114,6 +115,7 @@ export interface QuestionWithProgress {
   images: QuestionImage[]
   hasTable: boolean
   hasCode: boolean
+  animationKey?: string | null
   order: number
   progress: Progress
 }

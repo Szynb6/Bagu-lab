@@ -2,12 +2,13 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Eye, EyeOff, HelpCircle, Image as ImageIcon,
+  ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Clapperboard, Eye, EyeOff, HelpCircle, Image as ImageIcon,
   Keyboard, Lightbulb, Moon, NotebookPen, PartyPopper, RotateCcw, Star, Sun, X,
 } from 'lucide-vue-next'
 import { knowledgeApi, studyApi } from '@/api'
 import { useUiStore } from '@/stores/ui'
 import MarkdownView from '@/components/common/MarkdownView.vue'
+import QuestionAnimation from '@/components/animations/QuestionAnimation.vue'
 import PriorityBadge from '@/components/common/PriorityBadge.vue'
 import StatusDot from '@/components/common/StatusDot.vue'
 import { previewLabel, schedule } from '@/utils/sm2'
@@ -24,6 +25,7 @@ const index = ref(0)
 const loading = ref(true)
 const revealed = ref(false)
 const showHint = ref(false)
+const showAnimation = ref(false)
 const showShortcuts = ref(false)
 const finished = ref(false)
 
@@ -98,6 +100,7 @@ async function loadQueue() {
   index.value = 0
   revealed.value = false
   showHint.value = false
+  showAnimation.value = false
   stats[1] = stats[2] = stats[3] = stats[4] = 0
   sessionStart.value = Date.now()
   cardStart.value = Date.now()
@@ -138,6 +141,7 @@ function goCard(nextIdx: number) {
   index.value = nextIdx
   revealed.value = false
   showHint.value = false
+  showAnimation.value = false
   syncNote()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -443,6 +447,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">参考答案</span>
                 <div class="flex items-center gap-2">
                   <button
+                    v-if="current.animationKey"
+                    class="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium transition"
+                    :class="showAnimation
+                      ? 'border-indigo-300 bg-indigo-50 text-indigo-700 dark:border-indigo-500/40 dark:bg-indigo-500/20 dark:text-indigo-200'
+                      : 'border-indigo-200 bg-indigo-50/60 text-indigo-600 hover:bg-indigo-100/80 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300'"
+                    @click="showAnimation = !showAnimation"
+                  >
+                    <Clapperboard class="h-3.5 w-3.5" /> {{ showAnimation ? '收起动画' : '原理动画' }}
+                  </button>
+                  <button
                     v-if="current.images.length"
                     class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                     @click="openDiagrams"
@@ -459,6 +473,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
               </div>
 
               <div class="mx-auto max-w-[780px]">
+                <Transition name="slide-up">
+                  <QuestionAnimation v-if="showAnimation && current.animationKey" :animation-key="current.animationKey" class="mb-6" />
+                </Transition>
                 <MarkdownView :source="current.answerMd" />
               </div>
 

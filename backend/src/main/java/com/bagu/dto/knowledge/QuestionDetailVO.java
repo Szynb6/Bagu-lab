@@ -27,6 +27,7 @@ public class QuestionDetailVO {
     private List<QuestionImageVO> images;
     private boolean hasTable;
     private boolean hasCode;
+    private String animationKey;
     private Integer order;
     private ProgressVO progress;
 }

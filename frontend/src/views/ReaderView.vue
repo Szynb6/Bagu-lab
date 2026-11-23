@@ -6,6 +6,7 @@ import {
 } from 'lucide-vue-next'
 import { knowledgeApi, studyApi } from '@/api'
 import MarkdownView from '@/components/common/MarkdownView.vue'
+import QuestionAnimation from '@/components/animations/QuestionAnimation.vue'
 import PriorityBadge from '@/components/common/PriorityBadge.vue'
 import StatusDot from '@/components/common/StatusDot.vue'
 import ModuleIcon from '@/components/common/ModuleIcon.vue'
@@ -261,6 +262,7 @@ async function onToggleStar(q: QuestionWithProgress) {
 
             <!-- 答案区（支持自测折叠） -->
             <div v-if="isAnswerShown(q.id)" class="px-5 py-5 sm:px-7">
+              <QuestionAnimation v-if="q.animationKey" :animation-key="q.animationKey" class="mb-5" />
               <MarkdownView :source="q.answerMd" />
 
               <div

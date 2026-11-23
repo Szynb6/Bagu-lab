@@ -383,6 +383,9 @@ async function onToggleStar(q: QuestionItem, e: Event) {
                 <span v-if="q.hasCode" class="inline-flex items-center text-[11px] text-slate-400" title="含代码示例">
                   <Code2 class="h-3 w-3" />
                 </span>
+                <span v-if="q.hasAnimation" class="inline-flex items-center gap-0.5 rounded bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300" title="含交互式原理动画">
+                  <Play class="h-2.5 w-2.5 fill-current" /> 动画
+                </span>
                 <span v-if="q.progress.hasNote" class="inline-flex items-center gap-0.5 text-[11px] text-brand-600 dark:text-brand-400" title="有助记备注">
                   <FileText class="h-3 w-3" /> 助记
                 </span>

@@ -54,6 +54,7 @@
             COALESCE(jsonb_array_length(q.images_json), 0) AS image_count,
             q.has_table,
             q.has_code,
+            (q.animation_key IS NOT NULL AND q.animation_key &lt;&gt; '') AS has_animation,
             q.sort_order,
             COALESCE(sp.status, 0)               AS progress_status,
             COALESCE(sp.lapse_count, 0)          AS lapse_count,
