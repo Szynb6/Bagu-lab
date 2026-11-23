@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowRight, BookOpen, Brain, Eye, EyeOff, Keyboard, Loader2 } from 'lucide-vue-next'
+import { ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
@@ -31,77 +31,115 @@ async function submit() {
   }
 }
 
-const features = [
-  { icon: Brain, title: '主动回忆 + SM-2', desc: '先想再看，遗忘曲线自动排期' },
-  { icon: BookOpen, title: '9 大模块 · 375 题', desc: 'P0 / P1 / P2 考频分级，102 张原理图' },
-  { icon: Keyboard, title: '全键盘极速刷题', desc: 'Space 翻面 · 1~4 自评 · H 提示 · S 收藏' },
+const specs = [
+  { label: '核心模块', value: '09 卷' },
+  { label: '精选真题', value: '375 道' },
+  { label: '架构图解', value: '102 张' },
+  { label: '交互式原理推演', value: '91 组' },
+]
+
+const shortcuts = [
+  { key: 'Space', desc: '揭晓答案与解析' },
+  { key: '1 - 4', desc: 'SM-2 四级记忆评分' },
+  { key: 'Z', desc: '撤销上一题评分' },
+  { key: 'H / S', desc: '提示关键词 / 收藏' },
 ]
 </script>
 
 <template>
-  <div class="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
-    <div class="pointer-events-none absolute -left-40 -top-40 h-[480px] w-[480px] rounded-full bg-brand-500/15 blur-3xl" />
-    <div class="pointer-events-none absolute -bottom-40 -right-32 h-[420px] w-[420px] rounded-full bg-indigo-500/15 blur-3xl" />
-
-    <div class="relative grid w-full max-w-5xl items-center gap-12 lg:grid-cols-2">
-      <div class="hidden lg:block">
-        <div class="flex items-center gap-3">
-          <img src="/favicon.svg" class="h-11 w-11" alt="logo" />
-          <span class="text-2xl font-semibold tracking-tight">Bagu Lab</span>
-        </div>
-        <h2 class="mt-8 text-4xl font-semibold leading-tight tracking-tight">
-          把 Java 八股<br />
-          <span class="bg-gradient-to-r from-brand-600 to-indigo-500 bg-clip-text text-transparent">真正背进脑子里</span>
-        </h2>
-        <p class="mt-4 text-slate-500 dark:text-slate-400">个人专属的面试八股记忆引擎，电脑与手机进度实时同步。</p>
-        <div class="mt-10 space-y-5">
-          <div v-for="f in features" :key="f.title" class="flex items-start gap-4">
-            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
-              <component :is="f.icon" class="h-5 w-5 text-brand-600" />
-            </span>
+  <div class="flex min-h-dvh items-center justify-center px-4 py-10">
+    <div class="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] lg:grid-cols-12">
+      <!-- 左侧工程手稿规格铭牌 -->
+      <aside class="hidden flex-col justify-between border-r border-[var(--border-default)] bg-[var(--bg-sidebar)] p-8 lg:col-span-6 lg:flex">
+        <div>
+          <div class="flex items-center gap-3">
+            <img src="/favicon.svg" class="h-9 w-9" alt="Bagu Lab" />
             <div>
-              <p class="font-medium">{{ f.title }}</p>
-              <p class="text-sm text-slate-500 dark:text-slate-400">{{ f.desc }}</p>
+              <p class="text-base font-semibold tracking-tight text-[var(--text-primary)]">Bagu Lab</p>
+              <p class="font-mono text-[11px] text-[var(--text-muted)]">Java 后端面试记忆手稿</p>
+            </div>
+          </div>
+
+          <p class="mt-8 text-2xl font-semibold leading-snug tracking-tight text-[var(--text-primary)]">
+            主动回忆与 SM-2 间隔排期，<br />
+            <span class="text-[#C84B31] dark:text-[#E06246]">把底层原理真正刻进肌肉记忆。</span>
+          </p>
+
+          <dl class="mt-7 grid grid-cols-2 divide-x divide-y overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] [border-color:var(--border-default)] [&>div]:border-[var(--border-default)]">
+            <div v-for="s in specs" :key="s.label" class="px-4 py-3">
+              <dt class="text-[11px] text-[var(--text-muted)]">{{ s.label }}</dt>
+              <dd class="mt-1 font-mono text-base font-semibold tabular-nums text-[var(--text-primary)]">{{ s.value }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="mt-8 border-t border-[var(--border-default)] pt-5">
+          <p class="mb-2.5 text-xs font-medium text-[var(--text-secondary)]">闪卡工作流快捷键</p>
+          <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+            <div v-for="sc in shortcuts" :key="sc.key" class="flex items-center gap-2">
+              <kbd class="kbd shrink-0">{{ sc.key }}</kbd>
+              <span class="truncate text-[var(--text-secondary)]">{{ sc.desc }}</span>
             </div>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <form class="card mx-auto w-full max-w-md p-8 sm:p-10" @submit.prevent="submit">
-        <div class="mb-8 flex items-center gap-3 lg:hidden">
-          <img src="/favicon.svg" class="h-9 w-9" alt="logo" />
-          <span class="text-xl font-semibold">Bagu Lab</span>
-        </div>
-        <h3 class="text-2xl font-semibold tracking-tight">欢迎回来 👋</h3>
-        <p class="mt-1.5 text-sm text-slate-500 dark:text-slate-400">登录后继续今天的复习计划</p>
-
-        <label class="mt-8 block text-sm font-medium">用户名</label>
-        <input
-          v-model="username"
-          autocomplete="username"
-          class="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-slate-700 dark:bg-slate-950"
-          placeholder="请输入用户名"
-        />
-
-        <label class="mt-5 block text-sm font-medium">密码</label>
-        <div class="relative mt-2">
-          <input
-            v-model="password"
-            :type="showPwd ? 'text' : 'password'"
-            autocomplete="current-password"
-            class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-11 text-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-slate-700 dark:bg-slate-950"
-            placeholder="请输入密码"
-          />
-          <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" @click="showPwd = !showPwd">
-            <component :is="showPwd ? EyeOff : Eye" class="h-4 w-4" />
-          </button>
+      <!-- 右侧登录表单 -->
+      <form class="flex flex-col justify-center p-7 sm:p-10 lg:col-span-6" @submit.prevent="submit">
+        <div class="mb-7 flex items-center gap-2.5 lg:hidden">
+          <img src="/favicon.svg" class="h-8 w-8" alt="Bagu Lab" />
+          <span class="text-lg font-semibold tracking-tight">Bagu Lab</span>
         </div>
 
-        <p v-if="error" class="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400">{{ error }}</p>
+        <h1 class="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">登录学习工作台</h1>
+        <p class="mt-1.5 text-sm text-[var(--text-secondary)]">输入账号密码，同步桌面与移动端背诵进度</p>
 
-        <button type="submit" class="btn-primary mt-8 h-11 w-full" :disabled="loading">
+        <div class="mt-7 space-y-4">
+          <div>
+            <label for="login-username" class="block text-sm font-medium text-[var(--text-primary)]">用户名</label>
+            <input
+              id="login-username"
+              v-model="username"
+              autocomplete="username"
+              class="mt-1.5 h-11 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500"
+              placeholder="请输入用户名"
+            />
+          </div>
+
+          <div>
+            <label for="login-password" class="block text-sm font-medium text-[var(--text-primary)]">密码</label>
+            <div class="relative mt-1.5">
+              <input
+                id="login-password"
+                v-model="password"
+                :type="showPwd ? 'text' : 'password'"
+                autocomplete="current-password"
+                class="h-11 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 pr-11 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500"
+                placeholder="请输入密码"
+              />
+              <button
+                type="button"
+                class="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-brand-500"
+                :aria-label="showPwd ? '隐藏密码' : '显示密码'"
+                @click="showPwd = !showPwd"
+              >
+                <component :is="showPwd ? EyeOff : Eye" class="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p
+          v-if="error"
+          role="alert"
+          class="mt-4 rounded-lg border border-[#EFC9BF] bg-[#FBF0ED] px-3 py-2 text-sm text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]"
+        >
+          {{ error }}
+        </p>
+
+        <button type="submit" class="btn-primary mt-7 h-11 w-full" :disabled="loading">
           <Loader2 v-if="loading" class="h-4 w-4 animate-spin" />
-          <template v-else>登录 <ArrowRight class="h-4 w-4" /></template>
+          <template v-else>进入工作台 <ArrowRight class="h-4 w-4" /></template>
         </button>
       </form>
     </div>

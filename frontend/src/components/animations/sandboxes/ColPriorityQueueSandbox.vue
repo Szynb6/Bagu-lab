@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   ArrowUpDown,
@@ -10,7 +10,7 @@ import {
   Play,
   Plus,
   RotateCcw,
-  Sparkles,
+  Lightbulb,
 } from 'lucide-vue-next'
 
 type Mode = 'guided' | 'sandbox'
@@ -456,10 +456,10 @@ function resetSandbox(empty = false) {
 
 function nodeTone(idx: number) {
   if (cur.value.swappedIdx.includes(idx)) {
-    return 'fill-emerald-500 stroke-emerald-600 text-white'
+    return 'fill-emerald-700 stroke-emerald-600 text-white'
   }
   if (cur.value.compareIdx.includes(idx)) {
-    return 'fill-amber-500 stroke-amber-600 text-white'
+    return 'fill-amber-700 stroke-amber-600 text-white'
   }
   if (cur.value.highlightIdx === idx) {
     return 'fill-brand-600 stroke-brand-700 text-white'
@@ -477,10 +477,10 @@ function isSolidIdx(idx: number) {
 
 function arrayCellClass(idx: number) {
   if (cur.value.swappedIdx.includes(idx)) {
-    return 'border-emerald-500 bg-emerald-500 text-white shadow-xs'
+    return 'border-emerald-500 bg-emerald-700 text-white shadow-xs'
   }
   if (cur.value.compareIdx.includes(idx)) {
-    return 'border-amber-500 bg-amber-500 text-white shadow-xs'
+    return 'border-amber-500 bg-amber-700 text-white shadow-xs'
   }
   if (cur.value.highlightIdx === idx) {
     return 'border-brand-600 bg-brand-600 text-white shadow-xs'
@@ -549,7 +549,7 @@ function arrayCellClass(idx: number) {
                 :x2="node.x"
                 :y2="node.y"
                 stroke-width="2"
-                class="stroke-slate-300 transition-all duration-300 dark:stroke-slate-700"
+                class="stroke-slate-300 transition-[fill,stroke,opacity] duration-300 dark:stroke-slate-700"
               />
             </template>
 
@@ -558,7 +558,7 @@ function arrayCellClass(idx: number) {
               <circle
                 r="17"
                 stroke-width="2"
-                class="transition-all duration-300"
+                class="transition-[fill,stroke,opacity] duration-300"
                 :class="nodeTone(node.idx)"
               />
               <text
@@ -585,7 +585,7 @@ function arrayCellClass(idx: number) {
               <div
                 v-for="(val, idx) in cur.heap"
                 :key="`arr-${idx}`"
-                class="flex flex-col items-center rounded-lg border py-1.5 font-mono transition-all duration-300"
+                class="flex flex-col items-center rounded-lg border py-1.5 font-mono transition-[fill,stroke,opacity] duration-300"
                 :class="arrayCellClass(idx)"
               >
                 <span class="text-xs font-bold">{{ val }}</span>
@@ -619,7 +619,7 @@ function arrayCellClass(idx: number) {
         <p class="font-semibold text-slate-900 dark:text-white">{{ currentGuided.title }}</p>
         <p class="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">{{ currentGuided.speech }}</p>
         <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-          <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+          <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
           <span>{{ currentGuided.tip }}</span>
         </p>
       </div>
@@ -629,7 +629,7 @@ function arrayCellClass(idx: number) {
           <button
             v-for="(_, i) in guidedSteps"
             :key="i"
-            class="h-2 rounded-full transition-all"
+            class="h-2 rounded-full transition-[width,background-color] duration-200"
             :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
             :title="`第 ${i + 1} 步`"
             @click="stopPlay(); stepIdx = i"

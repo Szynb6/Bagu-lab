@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Sparkles } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Lightbulb, Pause, Play, RotateCcw } from 'lucide-vue-next'
 import type { StateNode, StateSpec, StateTransition } from '../types'
 
 const props = defineProps<{ spec: StateSpec }>()
@@ -70,13 +70,13 @@ function isCurrent(id: string) {
 
 function nodeClass(n: StateNode) {
   if (mode.value === 'guided') {
-    if (step.value.dangerNodes?.includes(n.id)) return 'fill-red-500 stroke-red-600'
+    if (step.value.dangerNodes?.includes(n.id)) return 'fill-red-700 stroke-red-800'
     if (step.value.currentNodes.includes(n.id)) return 'fill-brand-600 stroke-brand-700'
-    if (step.value.visitedNodes?.includes(n.id)) return 'fill-emerald-500 stroke-emerald-600'
+    if (step.value.visitedNodes?.includes(n.id)) return 'fill-emerald-700 stroke-emerald-800'
   } else if (freeNode.value === n.id) {
     return 'fill-brand-600 stroke-brand-700'
   }
-  return 'fill-white stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600'
+  return 'fill-white stroke-[#D4D0C5] dark:fill-[#22211E] dark:stroke-[#3B3933]'
 }
 
 function isSolid(id: string) {
@@ -130,31 +130,33 @@ const uid = `sm-${Math.random().toString(36).slice(2, 8)}`
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div
         v-if="spec.interactive"
-        class="inline-flex rounded-xl border border-slate-200 bg-slate-100/80 p-0.5 text-xs dark:border-slate-700 dark:bg-slate-800"
+        class="inline-flex rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-0.5 text-xs"
       >
         <button
-          class="rounded-lg px-2.5 py-1 font-medium transition"
-          :class="mode === 'guided' ? 'bg-white text-brand-700 shadow-xs dark:bg-slate-900 dark:text-brand-300' : 'text-slate-500'"
+          type="button"
+          class="rounded-md px-2.5 py-1 font-medium transition-colors"
+          :class="mode === 'guided' ? 'bg-[var(--bg-surface)] text-[#C84B31] dark:text-[#E06246]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
           @click="stopPlay(); mode = 'guided'"
         >
           标准演练
         </button>
         <button
-          class="rounded-lg px-2.5 py-1 font-medium transition"
-          :class="mode === 'explore' ? 'bg-white text-brand-700 shadow-xs dark:bg-slate-900 dark:text-brand-300' : 'text-slate-500'"
+          type="button"
+          class="rounded-md px-2.5 py-1 font-medium transition-colors"
+          :class="mode === 'explore' ? 'bg-[var(--bg-surface)] text-[#C84B31] dark:text-[#E06246]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
           @click="stopPlay(); mode = 'explore'"
         >
           自由触发跃迁
         </button>
       </div>
-      <span v-else class="text-xs font-medium text-slate-400">状态机演练</span>
+      <span v-else class="text-xs font-medium text-[var(--text-muted)]">状态机演练</span>
 
-      <span class="rounded-full bg-brand-100/80 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+      <span class="rounded border border-[#EFC9BF] bg-[#FBF0ED] px-2 py-0.5 font-mono text-[11px] font-semibold tabular-nums text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]">
         {{ mode === 'guided' ? `${step.badge} · ${stepIdx + 1}/${spec.steps.length}` : `当前：${nodeMap[freeNode]?.label}` }}
       </span>
     </div>
 
-    <div class="overflow-x-auto rounded-xl border border-slate-200/80 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-950/70">
+    <div class="overflow-x-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-2.5">
       <svg :viewBox="spec.viewBox ?? '0 0 760 280'" class="mx-auto w-full min-w-[560px] max-w-[760px] select-none">
         <defs>
           <marker :id="`${uid}-arr`" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -166,19 +168,21 @@ const uid = `sm-${Math.random().toString(36).slice(2, 8)}`
           <path
             :d="edgeGeom(t).d"
             fill="none"
-            :stroke-width="isActiveEdge(t.id) ? 2.6 : 1.6"
+            :stroke-width="isActiveEdge(t.id) ? 2.5 : 1.5"
             :marker-end="`url(#${uid}-arr)`"
-            class="transition-all duration-300"
-            :class="isActiveEdge(t.id)
-              ? 'text-brand-500 stroke-brand-500 [stroke-dasharray:6_4]'
-              : 'text-slate-300 stroke-slate-300 dark:text-slate-700 dark:stroke-slate-700'"
+            class="transition-[stroke,opacity] duration-300"
+            :class="
+              isActiveEdge(t.id)
+                ? 'text-brand-500 stroke-brand-500 [stroke-dasharray:6_4]'
+                : 'text-[#C8C3B8] stroke-[#C8C3B8] dark:text-[#3B3933] dark:stroke-[#3B3933]'
+            "
           />
           <text
             :x="edgeGeom(t).lx"
             :y="edgeGeom(t).ly"
             text-anchor="middle"
             class="text-[9.5px] font-medium"
-            :class="isActiveEdge(t.id) ? 'fill-brand-600 font-semibold dark:fill-brand-300' : 'fill-slate-400'"
+            :class="isActiveEdge(t.id) ? 'fill-[#96311D] font-semibold dark:fill-[#EFC0B3]' : 'fill-[#736E64] dark:fill-[#8F8A7E]'"
           >
             {{ t.label }}
           </text>
@@ -188,9 +192,9 @@ const uid = `sm-${Math.random().toString(36).slice(2, 8)}`
           <rect
             :width="n.w ?? 112"
             :height="n.h ?? 44"
-            :rx="n.r ?? 14"
-            stroke-width="1.8"
-            class="transition-all duration-300"
+            :rx="n.r ?? 12"
+            stroke-width="1.6"
+            class="transition-[fill,stroke] duration-300"
             :class="nodeClass(n)"
           />
           <text
@@ -198,7 +202,7 @@ const uid = `sm-${Math.random().toString(36).slice(2, 8)}`
             :y="n.sub ? (n.h ?? 44) / 2 - 3 : (n.h ?? 44) / 2 + 4"
             text-anchor="middle"
             class="text-[11px] font-semibold"
-            :class="isSolid(n.id) ? 'fill-white' : 'fill-slate-800 dark:fill-slate-100'"
+            :class="isSolid(n.id) ? 'fill-white' : 'fill-[#161614] dark:fill-[#ECEAE4]'"
           >
             {{ n.label }}
           </text>
@@ -208,12 +212,12 @@ const uid = `sm-${Math.random().toString(36).slice(2, 8)}`
             :y="(n.h ?? 44) / 2 + 12"
             text-anchor="middle"
             class="text-[9px]"
-            :class="isSolid(n.id) ? 'fill-white/85' : 'fill-slate-400'"
+            :class="isSolid(n.id) ? 'fill-white/90' : 'fill-[#5E5A52] dark:fill-[#A8A397]'"
           >
             {{ n.sub }}
           </text>
           <g v-if="mode === 'guided' && step.nodeTags?.[n.id]" :transform="`translate(${(n.w ?? 112) / 2 - 30}, -12)`">
-            <rect width="60" height="16" rx="8" class="fill-amber-500" />
+            <rect width="60" height="16" rx="6" class="fill-amber-700" />
             <text x="30" y="11" text-anchor="middle" class="fill-white text-[9px] font-bold">
               {{ step.nodeTags[n.id] }}
             </text>
@@ -224,11 +228,11 @@ const uid = `sm-${Math.random().toString(36).slice(2, 8)}`
     </div>
 
     <template v-if="mode === 'guided'">
-      <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 text-sm dark:border-slate-800 dark:bg-slate-900/80">
-        <p class="font-semibold text-slate-900 dark:text-white">{{ step.title }}</p>
-        <p class="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">{{ step.speech }}</p>
-        <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-          <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+      <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-3.5 text-sm">
+        <p class="font-semibold text-[var(--text-primary)]">{{ step.title }}</p>
+        <p class="mt-1 leading-relaxed text-[var(--text-secondary)]">{{ step.speech }}</p>
+        <p class="mt-2.5 flex items-start gap-1.5 rounded-md border border-amber-300/70 bg-amber-50/70 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-700/40 dark:bg-amber-950/35 dark:text-amber-200">
+          <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
           <span>{{ step.tip }}</span>
         </p>
       </div>
@@ -238,23 +242,25 @@ const uid = `sm-${Math.random().toString(36).slice(2, 8)}`
           <button
             v-for="(_, i) in spec.steps"
             :key="i"
-            class="h-2 rounded-full transition-all"
-            :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
+            type="button"
+            class="h-2 rounded-full transition-[width,background-color] duration-200"
+            :class="i === stepIdx ? 'w-6 bg-[#C84B31] dark:bg-[#E06246]' : 'w-2 bg-[var(--border-strong)] hover:bg-[var(--text-muted)]'"
+            :aria-label="`跳转到第 ${i + 1} 步`"
             @click="stopPlay(); stepIdx = i"
           />
         </div>
         <div class="flex items-center gap-2">
-          <button class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx === 0" @click="stopPlay(); stepIdx--">
+          <button type="button" class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx === 0" @click="stopPlay(); stepIdx--">
             <ChevronLeft class="h-3.5 w-3.5" /> 上一步
           </button>
-          <button class="btn-primary h-8 px-3 text-xs" @click="togglePlay">
+          <button type="button" class="btn-primary h-8 px-3 text-xs" @click="togglePlay">
             <component :is="playing ? Pause : Play" class="h-3.5 w-3.5" />
             {{ playing ? '暂停' : '自动播放' }}
           </button>
-          <button class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx >= spec.steps.length - 1" @click="stopPlay(); stepIdx++">
+          <button type="button" class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx >= spec.steps.length - 1" @click="stopPlay(); stepIdx++">
             下一步 <ChevronRight class="h-3.5 w-3.5" />
           </button>
-          <button class="btn-ghost h-8 px-2 text-xs" title="重置" @click="stopPlay(); stepIdx = 0">
+          <button type="button" class="btn-ghost h-8 px-2 text-xs" title="重置" aria-label="重置动画到第一步" @click="stopPlay(); stepIdx = 0">
             <RotateCcw class="h-3.5 w-3.5" />
           </button>
         </div>
@@ -262,20 +268,21 @@ const uid = `sm-${Math.random().toString(36).slice(2, 8)}`
     </template>
 
     <template v-else>
-      <div class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+      <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 py-2.5 text-xs text-[var(--text-secondary)]">
         {{ freeLog }}
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button
           v-for="t in availableTransitions"
           :key="t.id"
+          type="button"
           class="btn-primary h-8 px-3 text-xs"
           @click="triggerTransition(t)"
         >
           {{ t.action ?? t.label }} → {{ nodeMap[t.to]?.label }}
         </button>
-        <span v-if="!availableTransitions.length" class="text-xs text-slate-400">已到达终态，点击右侧重置重新探索。</span>
-        <button class="btn-ghost ml-auto h-8 px-3 text-xs" @click="resetExplore">
+        <span v-if="!availableTransitions.length" class="text-xs text-[var(--text-muted)]">已到达终态，点击右侧重置重新探索。</span>
+        <button type="button" class="btn-ghost ml-auto h-8 px-3 text-xs" @click="resetExplore">
           <RotateCcw class="h-3.5 w-3.5" /> 重置状态
         </button>
       </div>

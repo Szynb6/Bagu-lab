@@ -73,15 +73,30 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey, true))
 
 <template>
   <Transition name="fade">
-    <div v-if="lightbox && current" class="fixed inset-0 z-[90] flex flex-col bg-slate-950/92 backdrop-blur-sm" @wheel.prevent="onWheel">
-      <div class="flex items-center justify-between px-4 py-3 text-slate-300">
-        <span class="text-sm">{{ lightbox.index + 1 }} / {{ total }}</span>
+    <div
+      v-if="lightbox && current"
+      role="dialog"
+      aria-modal="true"
+      aria-label="原理图大图预览"
+      class="fixed inset-0 z-[90] flex flex-col bg-[#111110]/94 backdrop-blur-sm"
+      @wheel.prevent="onWheel"
+    >
+      <div class="flex items-center justify-between px-4 py-3 text-[#ECEAE4]">
+        <span class="font-mono text-sm tabular-nums">{{ lightbox.index + 1 }} / {{ total }}</span>
         <div class="flex items-center gap-1">
-          <button class="rounded-lg p-2 hover:bg-white/10" title="缩小 (-)" @click="zoom(-0.25)"><ZoomOut class="h-5 w-5" /></button>
-          <span class="w-12 text-center text-xs tabular-nums">{{ Math.round(view.scale * 100) }}%</span>
-          <button class="rounded-lg p-2 hover:bg-white/10" title="放大 (+)" @click="zoom(0.25)"><ZoomIn class="h-5 w-5" /></button>
-          <button class="rounded-lg p-2 hover:bg-white/10" title="还原 (0)" @click="reset"><RotateCcw class="h-5 w-5" /></button>
-          <button class="ml-2 rounded-lg p-2 hover:bg-white/10" title="关闭 (Esc)" @click="ui.closeLightbox()"><X class="h-5 w-5" /></button>
+          <button type="button" class="rounded-lg p-2 hover:bg-white/10" title="缩小 (-)" aria-label="缩小图片" @click="zoom(-0.25)">
+            <ZoomOut class="h-5 w-5" />
+          </button>
+          <span class="w-12 text-center font-mono text-xs tabular-nums">{{ Math.round(view.scale * 100) }}%</span>
+          <button type="button" class="rounded-lg p-2 hover:bg-white/10" title="放大 (+)" aria-label="放大图片" @click="zoom(0.25)">
+            <ZoomIn class="h-5 w-5" />
+          </button>
+          <button type="button" class="rounded-lg p-2 hover:bg-white/10" title="还原 (0)" aria-label="重置缩放" @click="reset">
+            <RotateCcw class="h-5 w-5" />
+          </button>
+          <button type="button" class="ml-2 rounded-lg p-2 hover:bg-white/10" title="关闭 (Esc)" aria-label="关闭图片预览" @click="ui.closeLightbox()">
+            <X class="h-5 w-5" />
+          </button>
         </div>
       </div>
 
@@ -96,7 +111,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey, true))
           :src="current.url"
           :alt="current.caption"
           draggable="false"
-          class="max-h-[82vh] max-w-[92vw] cursor-grab select-none rounded-lg bg-white object-contain shadow-2xl active:cursor-grabbing"
+          class="max-h-[82vh] max-w-[92vw] cursor-grab select-none rounded-lg bg-[#F7F6F2] object-contain active:cursor-grabbing"
           :style="{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`, transition: drag ? 'none' : 'transform .15s ease' }"
           @pointerdown="onPointerDown"
           @pointermove="onPointerMove"
@@ -104,13 +119,27 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey, true))
           @dblclick="view.scale === 1 ? (view.scale = 2) : reset()"
         />
         <template v-if="total > 1">
-          <button class="absolute left-3 rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20" @click.stop="go(-1)"><ChevronLeft class="h-6 w-6" /></button>
-          <button class="absolute right-3 rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20" @click.stop="go(1)"><ChevronRight class="h-6 w-6" /></button>
+          <button
+            type="button"
+            class="absolute left-3 rounded-lg bg-white/15 p-2.5 text-white hover:bg-white/25"
+            aria-label="上一张图"
+            @click.stop="go(-1)"
+          >
+            <ChevronLeft class="h-6 w-6" />
+          </button>
+          <button
+            type="button"
+            class="absolute right-3 rounded-lg bg-white/15 p-2.5 text-white hover:bg-white/25"
+            aria-label="下一张图"
+            @click.stop="go(1)"
+          >
+            <ChevronRight class="h-6 w-6" />
+          </button>
         </template>
       </div>
 
-      <p v-if="current.caption" class="px-6 pb-6 pt-2 text-center text-sm text-slate-300">{{ current.caption }}</p>
-      <p class="hidden pb-3 text-center text-[11px] text-slate-500 lg:block">滚轮缩放 · 拖拽平移 · 双击放大 · ← → 切换 · Esc 关闭</p>
+      <p v-if="current.caption" class="px-6 pb-6 pt-2 text-center text-sm text-[#ECEAE4]">{{ current.caption }}</p>
+      <p class="hidden pb-3 text-center text-[11px] text-[#A8A397] lg:block">滚轮缩放 · 拖拽平移 · 双击放大 · ← → 切换 · Esc 关闭</p>
     </div>
   </Transition>
 </template>

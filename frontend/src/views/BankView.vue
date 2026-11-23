@@ -2,7 +2,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  BookOpen, ChevronDown, ChevronLeft, ChevronRight, Code2, FileText, Filter, Image, Layers, Loader2, Play, Search, Star, Table2, X,
+  BookOpen, ChevronDown, ChevronLeft, ChevronRight, Code2, FileText, Filter, Image, Layers, Loader2, Play,
+  RefreshCw, Search, Star, Table2, TriangleAlert, X, Zap,
 } from 'lucide-vue-next'
 import { knowledgeApi, studyApi } from '@/api'
 import { useUiStore } from '@/stores/ui'
@@ -10,49 +11,56 @@ import PriorityBadge from '@/components/common/PriorityBadge.vue'
 import StatusDot from '@/components/common/StatusDot.vue'
 import ModuleIcon from '@/components/common/ModuleIcon.vue'
 import { dueLabel } from '@/utils/format'
-import type { ModuleMeta, Priority, QuestionFilter, QuestionItem } from '@/types'
+import type { Priority, QuestionFilter, QuestionItem } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
 const ui = useUiStore()
 
-const modules = ref<ModuleMeta[]>([])
 const questions = ref<QuestionItem[]>([])
 const total = ref(0)
-const page = ref(1)
+const page = ref(Number(route.query.page) || 1)
 const pageSize = 20
 const totalPages = ref(0)
 const loading = ref(true)
+const loadError = ref('')
 const launchingStudy = ref(false)
 
 const selectedSlug = ref<string>((route.query.slug as string) || '')
 const selectedChapter = ref<number | null>(route.query.chapter ? Number(route.query.chapter) : null)
 const expandedSlug = ref<string>((route.query.slug as string) || '01-jvm')
-const priorities = ref<Priority[]>([])
+const priorities = ref<Priority[]>(
+  typeof route.query.priorities === 'string' && route.query.priorities
+    ? (route.query.priorities.split(',').filter((p): p is Priority => ['P0', 'P1', 'P2'].includes(p)))
+    : [],
+)
 const status = ref<NonNullable<QuestionFilter['status']>>(
   ((route.query.status as QuestionFilter['status']) || 'all'),
 )
-const keyword = ref('')
+const keyword = ref((route.query.q as string) || '')
 
-const statusOptions: { value: NonNullable<QuestionFilter['status']>; label: string }[] = [
-  { value: 'all', label: '全部状态' },
+const masteryOptions: { value: NonNullable<QuestionFilter['status']>; label: string }[] = [
+  { value: 'all', label: '全部' },
   { value: 'new', label: '未背' },
   { value: 'weak', label: '待巩固' },
   { value: 'reviewing', label: '复习中' },
   { value: 'mastered', label: '已掌握' },
-  { value: 'starred', label: '⭐ 已收藏' },
-  { value: 'noted', label: '📝 有助记' },
-  { value: 'animated', label: '🎬 有动画' },
+]
+
+const traitOptions: { value: NonNullable<QuestionFilter['status']>; label: string; icon: typeof Star }[] = [
+  { value: 'starred', label: '已收藏', icon: Star },
+  { value: 'noted', label: '有助记', icon: FileText },
+  { value: 'animated', label: '有动画', icon: Play },
 ]
 
 const priorityOptions: { value: Priority; label: string; active: string }[] = [
-  { value: 'P0', label: 'P0 必背', active: 'border-red-300 bg-red-50 text-red-600 dark:border-red-500/40 dark:bg-red-500/15 dark:text-red-300' },
-  { value: 'P1', label: 'P1 高频', active: 'border-blue-300 bg-blue-50 text-blue-600 dark:border-blue-500/40 dark:bg-blue-500/15 dark:text-blue-300' },
-  { value: 'P2', label: 'P2 了解', active: 'border-slate-400 bg-slate-100 text-slate-700 dark:border-slate-500 dark:bg-slate-700 dark:text-slate-200' },
+  { value: 'P0', label: 'P0 必背', active: 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]' },
+  { value: 'P1', label: 'P1 高频', active: 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/50 dark:text-amber-200' },
+  { value: 'P2', label: 'P2 了解', active: 'border-[var(--border-strong)] bg-[var(--bg-subtle)] text-[var(--text-primary)]' },
 ]
 
-const currentModule = computed(() => modules.value.find((m) => m.slug === selectedSlug.value) ?? null)
-const moduleTitleMap = computed(() => Object.fromEntries(modules.value.map((m) => [m.slug, m.title])))
+const currentModule = computed(() => ui.modules.find((m) => m.slug === selectedSlug.value) ?? null)
+const moduleTitleMap = computed(() => Object.fromEntries(ui.modules.map((m) => [m.slug, m.title])))
 
 function buildFilter(): QuestionFilter {
   return {
@@ -66,10 +74,27 @@ function buildFilter(): QuestionFilter {
   }
 }
 
+let syncingRoute = false
+function syncQueryToUrl() {
+  const nextQuery: Record<string, string> = {}
+  if (selectedSlug.value) nextQuery.slug = selectedSlug.value
+  if (selectedChapter.value !== null) nextQuery.chapter = String(selectedChapter.value)
+  if (priorities.value.length) nextQuery.priorities = priorities.value.join(',')
+  if (status.value !== 'all') nextQuery.status = status.value
+  if (keyword.value.trim()) nextQuery.q = keyword.value.trim()
+  if (page.value > 1) nextQuery.page = String(page.value)
+
+  syncingRoute = true
+  router.replace({ query: nextQuery }).finally(() => {
+    syncingRoute = false
+  })
+}
+
 let fetchSeq = 0
 async function fetchQuestions() {
   const my = ++fetchSeq
   loading.value = true
+  loadError.value = ''
   try {
     const res = await knowledgeApi.questions(buildFilter())
     if (my === fetchSeq) {
@@ -77,33 +102,49 @@ async function fetchQuestions() {
       total.value = res.total
       totalPages.value = res.totalPages
     }
+  } catch (e) {
+    if (my === fetchSeq) {
+      loadError.value = (e as Error).message || '加载题库列表失败，请重试'
+    }
   } finally {
     if (my === fetchSeq) loading.value = false
   }
 }
 
 onMounted(async () => {
-  modules.value = await knowledgeApi.modules()
+  await ui.loadModules().catch(() => {})
   await fetchQuestions()
 })
 
-// 监听侧边栏跳转到 /bank?status=starred 或 noted
+// 监听外部导航（如侧边栏我的收藏、仪表盘优先级跳转）
 watch(
   () => route.query,
   (q) => {
+    if (syncingRoute) return
     const nextStatus = ((q.status as QuestionFilter['status']) || 'all')
-    if (nextStatus !== status.value) status.value = nextStatus
     const nextSlug = (q.slug as string) || ''
-    if (nextSlug !== selectedSlug.value) {
-      selectedSlug.value = nextSlug
-      selectedChapter.value = q.chapter ? Number(q.chapter) : null
-    }
+    const nextChapter = q.chapter ? Number(q.chapter) : null
+    const nextPriorities = typeof q.priorities === 'string' && q.priorities
+      ? (q.priorities.split(',').filter((p): p is Priority => ['P0', 'P1', 'P2'].includes(p)))
+      : []
+    const nextKw = (q.q as string) || ''
+    const nextPage = Number(q.page) || 1
+
+    let changed = false
+    if (nextStatus !== status.value) { status.value = nextStatus; changed = true }
+    if (nextSlug !== selectedSlug.value) { selectedSlug.value = nextSlug; changed = true }
+    if (nextChapter !== selectedChapter.value) { selectedChapter.value = nextChapter; changed = true }
+    if (nextPriorities.join(',') !== priorities.value.join(',')) { priorities.value = nextPriorities; changed = true }
+    if (nextKw !== keyword.value) { keyword.value = nextKw; changed = true }
+    if (nextPage !== page.value) { page.value = nextPage; changed = true }
+    if (changed) fetchQuestions()
   },
 )
 
 let kwTimer: number | undefined
 watch([selectedSlug, selectedChapter, priorities, status], () => {
   page.value = 1
+  syncQueryToUrl()
   fetchQuestions()
 }, { deep: true })
 
@@ -111,13 +152,15 @@ watch(keyword, () => {
   clearTimeout(kwTimer)
   kwTimer = window.setTimeout(() => {
     page.value = 1
+    syncQueryToUrl()
     fetchQuestions()
-  }, 220)
+  }, 240)
 })
 
 function goPage(nextPage: number) {
   if (nextPage < 1 || nextPage > totalPages.value || nextPage === page.value) return
   page.value = nextPage
+  syncQueryToUrl()
   fetchQuestions()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -177,8 +220,7 @@ async function startFilteredStudy() {
   }
 }
 
-async function onToggleStar(q: QuestionItem, e: Event) {
-  e.stopPropagation()
+async function onToggleStar(q: QuestionItem) {
   q.progress.isStarred = !q.progress.isStarred
   try {
     q.progress.isStarred = await studyApi.toggleStar(q.id)
@@ -190,37 +232,50 @@ async function onToggleStar(q: QuestionItem, e: Event) {
 
 <template>
   <div class="flex flex-col gap-5 lg:flex-row lg:items-start">
-    <!-- 左侧模块 + 篇目树（桌面端） -->
-    <aside class="card hidden w-[268px] shrink-0 overflow-hidden lg:sticky lg:top-24 lg:block">
-      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">知识目录</p>
+    <!-- 左侧模块 + 篇目索引（桌面端） -->
+    <aside class="card hidden w-[264px] shrink-0 overflow-hidden lg:sticky lg:top-24 lg:block">
+      <div class="border-b border-[var(--border-default)] px-4 py-3">
+        <p class="text-xs font-semibold text-[var(--text-primary)]">知识卷目索引</p>
       </div>
       <div class="max-h-[calc(100vh-11rem)] space-y-0.5 overflow-y-auto p-2">
         <button
-          class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition"
-          :class="!selectedSlug ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-100' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'"
+          type="button"
+          class="flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-colors"
+          :class="
+            !selectedSlug
+              ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] text-[#C84B31] dark:text-[#E06246]'
+              : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]/70 hover:text-[var(--text-primary)]'
+          "
           @click="selectModule('')"
         >
           <Layers class="h-4 w-4 shrink-0" />
           <span>全部模块</span>
-          <span class="ml-auto text-xs tabular-nums text-slate-400">{{ modules.reduce((s, m) => s + m.questionCount, 0) }}</span>
+          <span class="ml-auto font-mono text-xs tabular-nums text-[var(--text-muted)]">
+            {{ ui.modules.reduce((s, m) => s + m.questionCount, 0) }}
+          </span>
         </button>
 
-        <div v-for="m in modules" :key="m.slug" class="pt-0.5">
+        <div v-for="m in ui.modules" :key="m.slug" class="pt-0.5">
           <div
-            class="flex items-center gap-1 rounded-xl px-2 py-1.5 transition"
-            :class="selectedSlug === m.slug && selectedChapter === null ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-100' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'"
+            class="flex items-center gap-1 rounded-lg border px-2 py-1.5 transition-colors"
+            :class="
+              selectedSlug === m.slug && selectedChapter === null
+                ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] text-[#C84B31] dark:text-[#E06246]'
+                : 'border-transparent text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]/60'
+            "
           >
             <button
-              class="rounded p-0.5 text-slate-400 hover:text-slate-600"
+              type="button"
+              class="rounded p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              :aria-label="expandedSlug === m.slug ? `折叠 ${m.title}` : `展开 ${m.title}`"
               @click="expandedSlug = expandedSlug === m.slug ? '' : m.slug"
             >
               <component :is="expandedSlug === m.slug ? ChevronDown : ChevronRight" class="h-3.5 w-3.5" />
             </button>
-            <button class="flex min-w-0 flex-1 items-center gap-2 text-left text-[13.5px] font-medium" @click="selectModule(m.slug)">
-              <span class="font-mono text-[11px] text-slate-400">{{ String(m.order).padStart(2, '0') }}</span>
+            <button type="button" class="flex min-w-0 flex-1 items-center gap-2 text-left text-[13.5px] font-medium" @click="selectModule(m.slug)">
+              <span class="font-mono text-[11px] tabular-nums text-[var(--text-muted)]">{{ String(m.order).padStart(2, '0') }}</span>
               <span class="truncate">{{ m.title }}</span>
-              <span class="ml-auto text-[11px] tabular-nums text-slate-400">{{ m.questionCount }}</span>
+              <span class="ml-auto font-mono text-[11px] tabular-nums text-[var(--text-muted)]">{{ m.questionCount }}</span>
             </button>
           </div>
 
@@ -228,14 +283,17 @@ async function onToggleStar(q: QuestionItem, e: Event) {
             <button
               v-for="ch in m.chapters"
               :key="ch.id"
-              class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition"
-              :class="selectedChapter === ch.id
-                ? 'bg-brand-50 font-medium text-brand-700 dark:bg-brand-500/15 dark:text-brand-100'
-                : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'"
+              type="button"
+              class="flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors"
+              :class="
+                selectedChapter === ch.id
+                  ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] font-medium text-[#C84B31] dark:text-[#E06246]'
+                  : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]/60 hover:text-[var(--text-primary)]'
+              "
               @click="selectChapter(m.slug, ch.id)"
             >
               <span class="truncate">{{ ch.title.replace(/^第[一二三四五六七八九十]+(?:篇|部分)[：:]\s*/, '') }}</span>
-              <span class="ml-auto shrink-0 tabular-nums text-[11px] text-slate-400">{{ ch.questionCount }}</span>
+              <span class="ml-auto shrink-0 font-mono text-[11px] tabular-nums text-[var(--text-muted)]">{{ ch.questionCount }}</span>
             </button>
           </div>
         </div>
@@ -247,17 +305,19 @@ async function onToggleStar(q: QuestionItem, e: Event) {
       <!-- 移动端横向模块选择器 -->
       <div class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden">
         <button
-          class="shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition"
-          :class="!selectedSlug ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'"
+          type="button"
+          class="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
+          :class="!selectedSlug ? 'border-[#C84B31] bg-[#C84B31] text-white' : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'"
           @click="selectModule('')"
         >
           全部
         </button>
         <button
-          v-for="m in modules"
+          v-for="m in ui.modules"
           :key="m.slug"
-          class="shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition"
-          :class="selectedSlug === m.slug ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'"
+          type="button"
+          class="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
+          :class="selectedSlug === m.slug ? 'border-[#C84B31] bg-[#C84B31] text-white' : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'"
           @click="selectModule(m.slug)"
         >
           {{ m.title }}
@@ -268,13 +328,13 @@ async function onToggleStar(q: QuestionItem, e: Event) {
       <div class="card space-y-3.5 p-4 sm:p-5">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-3">
-            <ModuleIcon v-if="currentModule" :icon="currentModule.icon" />
+            <ModuleIcon v-if="currentModule" :icon="currentModule.icon" :slug="currentModule.slug" :order="currentModule.order" />
             <div>
-              <h2 class="text-base font-semibold">
+              <h2 class="text-base font-semibold tracking-tight text-[var(--text-primary)]">
                 {{ currentModule ? currentModule.fullTitle : '全部八股题库' }}
               </h2>
-              <p class="text-xs text-slate-400">
-                当前匹配 <strong class="tabular-nums text-slate-700 dark:text-slate-200">{{ total }}</strong> 题
+              <p class="text-xs text-[var(--text-secondary)]">
+                当前匹配 <strong class="font-mono tabular-nums text-[var(--text-primary)]">{{ total }}</strong> 题
                 <template v-if="currentModule && selectedChapter !== null">
                   · {{ currentModule.chapters.find((c) => c.id === selectedChapter)?.title }}
                 </template>
@@ -290,19 +350,22 @@ async function onToggleStar(q: QuestionItem, e: Event) {
             >
               <BookOpen class="h-3.5 w-3.5" /> 通读本篇
             </RouterLink>
-            <button class="btn-primary h-9 px-3.5 text-xs" :disabled="!total || launchingStudy" @click="startFilteredStudy">
+            <button type="button" class="btn-primary h-9 px-3.5 text-xs" :disabled="!total || launchingStudy" @click="startFilteredStudy">
               <Loader2 v-if="launchingStudy" class="h-3.5 w-3.5 animate-spin" />
               <Play v-else class="h-3.5 w-3.5 fill-current" /> 刷当前 {{ total }} 题
             </button>
           </div>
         </div>
 
-        <!-- 考频 + 搜索 -->
-        <div class="flex flex-wrap items-center gap-2 pt-1">
-          <span class="mr-1 inline-flex items-center gap-1 text-xs text-slate-400"><Filter class="h-3.5 w-3.5" /> 考频</span>
+        <!-- 考频 + 关键词检索 -->
+        <div class="flex flex-wrap items-center gap-2 pt-0.5">
+          <span class="mr-1 inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
+            <Filter class="h-3.5 w-3.5" /> 考频
+          </span>
           <button
-            class="rounded-lg border px-2.5 py-1 text-xs font-medium transition"
-            :class="!priorities.length ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900' : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'"
+            type="button"
+            class="rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
+            :class="!priorities.length ? 'border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-surface)]' : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'"
             @click="priorities = []"
           >
             全部
@@ -310,146 +373,221 @@ async function onToggleStar(q: QuestionItem, e: Event) {
           <button
             v-for="p in priorityOptions"
             :key="p.value"
-            class="rounded-lg border px-2.5 py-1 text-xs font-medium transition"
-            :class="priorities.includes(p.value) ? p.active : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'"
+            type="button"
+            class="rounded-md border px-2.5 py-1 font-mono text-xs font-medium transition-colors"
+            :class="priorities.includes(p.value) ? p.active : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'"
             @click="togglePriority(p.value)"
           >
             {{ p.label }}
           </button>
 
-          <div class="relative ml-auto w-full sm:w-56">
-            <Search class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+          <div class="relative ml-auto w-full sm:w-60">
+            <label for="bank-keyword" class="sr-only">筛选题干关键词</label>
+            <Search class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
+              id="bank-keyword"
               v-model="keyword"
-              class="h-8 w-full rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-7 text-xs outline-none transition focus:border-brand-500 focus:bg-white dark:border-slate-700 dark:bg-slate-800/70 dark:focus:bg-slate-900"
+              class="h-8 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] pl-8 pr-7 text-xs text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31] focus:bg-[var(--bg-surface)]"
               placeholder="筛选题干关键词..."
             />
-            <button v-if="keyword" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" @click="keyword = ''">
+            <button
+              v-if="keyword"
+              type="button"
+              class="absolute right-1.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              aria-label="清空搜索关键词"
+              @click="keyword = ''"
+            >
               <X class="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
 
-        <!-- 状态胶囊 -->
-        <div class="flex flex-wrap items-center gap-1.5">
+        <!-- 掌握状态分段 + 内容特征标签（彻底分组、零 Emoji） -->
+        <div class="flex flex-wrap items-center gap-3 border-t border-[var(--border-default)] pt-3">
+          <div class="inline-flex flex-wrap rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-0.5" role="group" aria-label="按掌握状态筛选">
+            <button
+              v-for="s in masteryOptions"
+              :key="s.value"
+              type="button"
+              class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+              :class="
+                status === s.value
+                  ? 'bg-[var(--bg-surface)] text-[#C84B31] shadow-2xs dark:text-[#E06246]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              "
+              @click="status = s.value"
+            >
+              {{ s.label }}
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="按内容特征筛选">
+            <button
+              v-for="t in traitOptions"
+              :key="t.value"
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
+              :class="
+                status === t.value
+                  ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
+                  : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
+              "
+              @click="status = status === t.value ? 'all' : t.value"
+            >
+              <component :is="t.icon" class="h-3 w-3" />
+              {{ t.label }}
+            </button>
+          </div>
+
           <button
-            v-for="s in statusOptions"
-            :key="s.value"
-            class="rounded-full px-3 py-1 text-xs font-medium transition"
-            :class="status === s.value
-              ? 'bg-brand-600 text-white shadow-xs'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'"
-            @click="status = s.value"
+            v-if="hasActiveFilter"
+            type="button"
+            class="ml-auto text-xs font-medium text-[var(--text-muted)] underline-offset-2 hover:text-[#C84B31] hover:underline dark:hover:text-[#E06246]"
+            @click="resetFilters"
           >
-            {{ s.label }}
-          </button>
-          <button v-if="hasActiveFilter" class="ml-auto text-xs text-slate-400 hover:text-brand-600" @click="resetFilters">
             清空筛选
           </button>
         </div>
       </div>
 
-      <!-- 题目列表 -->
+      <!-- 题目列表加载态 -->
       <div v-if="loading" class="space-y-2.5 animate-pulse">
-        <div v-for="i in 6" :key="i" class="h-20 rounded-2xl bg-slate-200/70 dark:bg-slate-800/70" />
+        <div v-for="i in 6" :key="i" class="h-20 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]" />
       </div>
 
+      <!-- 错误态 -->
+      <div v-else-if="loadError" class="card flex flex-col items-center justify-center px-6 py-16 text-center">
+        <TriangleAlert class="h-9 w-9 text-[#C84B31] dark:text-[#E06246]" />
+        <p class="mt-3 text-sm font-medium text-[var(--text-primary)]">{{ loadError }}</p>
+        <button type="button" class="btn-primary mt-4 h-9 text-xs" @click="fetchQuestions">
+          <RefreshCw class="h-3.5 w-3.5" /> 重试加载
+        </button>
+      </div>
+
+      <!-- 空列表 -->
       <div v-else-if="!questions.length" class="card flex flex-col items-center justify-center py-16 text-center">
-        <Layers class="h-10 w-10 text-slate-300 dark:text-slate-600" />
-        <p class="mt-3 text-sm font-medium text-slate-600 dark:text-slate-300">当前筛选条件下暂无题目</p>
-        <button v-if="hasActiveFilter" class="btn-ghost mt-4 h-9 text-xs" @click="resetFilters">重置筛选条件</button>
+        <Layers class="h-9 w-9 text-[var(--text-muted)]" />
+        <p class="mt-3 text-sm font-medium text-[var(--text-primary)]">当前筛选条件下暂无题目</p>
+        <button v-if="hasActiveFilter" type="button" class="btn-ghost mt-4 h-9 text-xs" @click="resetFilters">重置筛选条件</button>
       </div>
 
       <template v-else>
-        <div class="card divide-y divide-slate-100 overflow-hidden dark:divide-slate-800">
-          <div
+        <!-- 题目列表账本 -->
+        <div class="card divide-y divide-[var(--border-default)] overflow-hidden">
+          <article
             v-for="q in questions"
             :key="q.id"
-            class="group flex cursor-pointer items-start gap-3 px-4 py-3.5 transition hover:bg-slate-50/90 sm:px-5 dark:hover:bg-slate-800/40"
-            @click="router.push({ name: 'study', query: { mode: 'single', id: String(q.id) } })"
+            class="group flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-subtle)]/55 sm:px-5"
           >
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-2">
-                <span v-if="!selectedSlug" class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                <span
+                  v-if="!selectedSlug"
+                  class="rounded border border-[var(--border-default)] bg-[var(--bg-subtle)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--text-secondary)]"
+                >
                   {{ q.moduleTitle || moduleTitleMap[q.moduleSlug] }}
                 </span>
-                <span class="font-mono text-xs font-semibold text-slate-400">{{ q.code }}</span>
+                <span class="font-mono text-xs font-semibold text-[var(--text-muted)]">{{ q.code }}</span>
                 <PriorityBadge :priority="q.priority" />
-                <span v-if="q.imageCount > 0" class="inline-flex items-center gap-0.5 text-[11px] text-slate-400" :title="`${q.imageCount} 张原理图`">
+                <span v-if="q.imageCount > 0" class="inline-flex items-center gap-0.5 font-mono text-[11px] text-[var(--text-muted)]" :title="`${q.imageCount} 张原理图`">
                   <Image class="h-3 w-3" /> {{ q.imageCount }}
                 </span>
-                <span v-if="q.hasTable" class="inline-flex items-center text-[11px] text-slate-400" title="含对比表格">
+                <span v-if="q.hasTable" class="inline-flex items-center text-[11px] text-[var(--text-muted)]" title="含对比表格">
                   <Table2 class="h-3 w-3" />
                 </span>
-                <span v-if="q.hasCode" class="inline-flex items-center text-[11px] text-slate-400" title="含代码示例">
+                <span v-if="q.hasCode" class="inline-flex items-center text-[11px] text-[var(--text-muted)]" title="含代码示例">
                   <Code2 class="h-3 w-3" />
                 </span>
-                <span v-if="q.hasAnimation" class="inline-flex items-center gap-0.5 rounded bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300" title="含交互式原理动画">
-                  <Play class="h-2.5 w-2.5 fill-current" /> 动画
+                <span
+                  v-if="q.hasAnimation"
+                  class="inline-flex items-center gap-1 rounded border border-[#EFC9BF] bg-[#FBF0ED] px-1.5 py-0.5 text-[11px] font-medium text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]"
+                  title="含交互式原理推演"
+                >
+                  <Play class="h-2.5 w-2.5 fill-current" /> 交互推演
                 </span>
-                <span v-if="q.progress.hasNote" class="inline-flex items-center gap-0.5 text-[11px] text-brand-600 dark:text-brand-400" title="有助记备注">
+                <span v-if="q.progress.hasNote" class="inline-flex items-center gap-0.5 text-[11px] font-medium text-[#2E6F5E] dark:text-[#4FA58E]" title="有助记备注">
                   <FileText class="h-3 w-3" /> 助记
                 </span>
               </div>
 
-              <p class="mt-1.5 text-[14.5px] font-medium leading-snug text-slate-900 group-hover:text-brand-600 dark:text-slate-100 dark:group-hover:text-brand-400">
+              <RouterLink
+                :to="{ name: 'study', query: { mode: 'single', id: String(q.id) } }"
+                class="mt-1.5 block text-[15px] font-medium leading-snug text-[var(--text-primary)] transition-colors hover:text-[#C84B31] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:hover:text-[#E06246]"
+              >
                 {{ q.title }}
-              </p>
+              </RouterLink>
 
-              <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+              <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
                 <StatusDot :status="q.progress.status" />
-                <span v-if="q.progress.nextReviewAt">{{ dueLabel(q.progress.nextReviewAt) }}</span>
-                <span v-if="q.progress.lapseCount > 0" class="text-amber-600 dark:text-amber-400">遗忘 {{ q.progress.lapseCount }} 次</span>
+                <span v-if="q.progress.nextReviewAt" class="font-mono">{{ dueLabel(q.progress.nextReviewAt) }}</span>
+                <span v-if="q.progress.lapseCount > 0" class="font-mono text-[#96311D] dark:text-[#EFC0B3]">遗忘 {{ q.progress.lapseCount }} 次</span>
               </div>
             </div>
 
             <div class="flex shrink-0 items-center gap-1 pt-0.5">
               <RouterLink
-                :to="{ name: 'reader', params: { slug: q.moduleSlug }, hash: `#${q.id}` }"
-                class="rounded-lg p-2 text-slate-400 opacity-0 transition hover:bg-slate-200/60 hover:text-slate-700 group-hover:opacity-100 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                :to="{ name: 'reader', params: { slug: q.moduleSlug }, query: { q: String(q.id) }, hash: `#${q.id}` }"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)] lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 focus-visible:opacity-100"
                 title="在通读页定位"
-                @click.stop
+                aria-label="在通读页定位该题"
               >
                 <BookOpen class="h-4 w-4" />
               </RouterLink>
+              <RouterLink
+                :to="{ name: 'study', query: { mode: 'single', id: String(q.id) } }"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[#FBF0ED] hover:text-[#C84B31] lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 focus-visible:opacity-100 dark:hover:bg-[#2E1B16] dark:hover:text-[#E06246]"
+                title="单题闪卡"
+                aria-label="进入单题闪卡背诵"
+              >
+                <Zap class="h-4 w-4" />
+              </RouterLink>
               <button
-                class="rounded-lg p-2 transition hover:bg-slate-200/60 dark:hover:bg-slate-700"
-                :class="q.progress.isStarred ? 'text-amber-400' : 'text-slate-300 hover:text-amber-400 dark:text-slate-600'"
+                type="button"
+                class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[var(--bg-subtle)]"
+                :class="q.progress.isStarred ? 'text-amber-500' : 'text-[var(--text-muted)] hover:text-amber-500'"
                 :title="q.progress.isStarred ? '取消收藏' : '收藏'"
-                @click="onToggleStar(q, $event)"
+                :aria-label="q.progress.isStarred ? '取消收藏该题' : '收藏该题'"
+                @click="onToggleStar(q)"
               >
                 <Star class="h-4 w-4" :class="q.progress.isStarred ? 'fill-current' : ''" />
               </button>
             </div>
-          </div>
+          </article>
         </div>
 
-        <!-- 后端分页栏 -->
-        <div v-if="totalPages > 1" class="flex flex-wrap items-center justify-between gap-3 px-1 pt-1 text-xs text-slate-500 dark:text-slate-400">
-          <span class="tabular-nums">共 {{ total }} 题 · 第 {{ page }} / {{ totalPages }} 页</span>
+        <!-- 分页栏 -->
+        <div v-if="totalPages > 1" class="flex flex-wrap items-center justify-between gap-3 px-1 pt-1 text-xs text-[var(--text-secondary)]">
+          <span class="font-mono tabular-nums">共 {{ total }} 题 · 第 {{ page }} / {{ totalPages }} 页</span>
           <div class="flex items-center gap-1">
             <button
-              class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              type="button"
+              class="btn-ghost h-8 px-2.5 text-xs"
               :disabled="page <= 1"
               @click="goPage(page - 1)"
             >
               <ChevronLeft class="h-3.5 w-3.5" /> 上一页
             </button>
-            <template v-for="(p, idx) in pageNumbers" :key="idx">
-              <span v-if="p === '...'" class="px-1.5 text-slate-400">…</span>
-              <button
-                v-else
-                class="h-8 min-w-8 rounded-lg px-2 font-medium tabular-nums transition"
-                :class="p === page
-                  ? 'bg-brand-600 text-white'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'"
-                @click="goPage(p)"
-              >
-                {{ p }}
-              </button>
-            </template>
+            <div class="hidden items-center gap-1 sm:flex">
+              <template v-for="(p, idx) in pageNumbers" :key="idx">
+                <span v-if="p === '...'" class="px-1.5 text-[var(--text-muted)]">…</span>
+                <button
+                  v-else
+                  type="button"
+                  class="h-8 min-w-8 rounded-lg px-2 font-mono font-medium tabular-nums transition-colors"
+                  :class="
+                    p === page
+                      ? 'bg-[#C84B31] text-white'
+                      : 'border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
+                  "
+                  @click="goPage(p)"
+                >
+                  {{ p }}
+                </button>
+              </template>
+            </div>
             <button
-              class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              type="button"
+              class="btn-ghost h-8 px-2.5 text-xs"
               :disabled="page >= totalPages"
               @click="goPage(page + 1)"
             >

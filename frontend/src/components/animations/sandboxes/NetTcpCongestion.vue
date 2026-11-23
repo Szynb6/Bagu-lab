@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   Activity,
@@ -7,7 +7,7 @@ import {
   Pause,
   Play,
   RotateCcw,
-  Sparkles,
+  Lightbulb,
   TrendingUp,
 } from 'lucide-vue-next'
 
@@ -216,8 +216,8 @@ function toggleAutoDemo() {
 
 function pointColorClass(p: Point) {
   if (p.event === 'rto') return 'fill-red-500 stroke-white'
-  if (p.event === 'dup-ack') return 'fill-amber-500 stroke-white'
-  if (p.phase === '拥塞避免') return 'fill-emerald-500 stroke-white'
+  if (p.event === 'dup-ack') return 'fill-amber-700 stroke-white'
+  if (p.phase === '拥塞避免') return 'fill-emerald-700 stroke-white'
   return 'fill-brand-600 stroke-white'
 }
 
@@ -297,7 +297,7 @@ onBeforeUnmount(stopAuto)
           :d="ssthreshPath"
           fill="none"
           stroke-width="2"
-          class="stroke-amber-500 [stroke-dasharray:6_4] transition-all duration-300"
+          class="stroke-amber-500 [stroke-dasharray:6_4] transition-[fill,stroke,opacity] duration-300"
         />
         <rect
           :x="chartRight - 96"
@@ -305,7 +305,7 @@ onBeforeUnmount(stopAuto)
           width="94"
           height="16"
           rx="4"
-          class="fill-amber-500/90"
+          class="fill-amber-700/90"
         />
         <text
           :x="chartRight - 49"
@@ -323,7 +323,7 @@ onBeforeUnmount(stopAuto)
           stroke-width="2.6"
           stroke-linejoin="round"
           stroke-linecap="round"
-          class="stroke-brand-500 transition-all duration-300"
+          class="stroke-brand-500 transition-[fill,stroke,opacity] duration-300"
         />
 
         <!-- 数据点与拥塞事件标记 -->
@@ -407,7 +407,7 @@ onBeforeUnmount(stopAuto)
     <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 text-sm dark:border-slate-800 dark:bg-slate-900/80">
       <p class="leading-relaxed text-slate-700 dark:text-slate-200">{{ logText }}</p>
       <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-        <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+        <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
         <span>核心区别：RTO 超时意味着网络丢包严重，cwnd 暴力打回 1；3 个冗余 ACK 说明后续报文仍在到达，触发快重传/快恢复，cwnd 直接降为 ssthresh 避免吞吐断崖跌落。</span>
       </p>
     </div>

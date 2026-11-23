@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   AlertOctagon,
@@ -7,7 +7,7 @@ import {
   Play,
   RotateCcw,
   ShieldAlert,
-  Sparkles,
+  Lightbulb,
   XCircle,
 } from 'lucide-vue-next'
 
@@ -516,7 +516,7 @@ onBeforeUnmount(stopTimer)
             height="112"
             rx="14"
             stroke-width="1.8"
-            class="transition-all duration-300"
+            class="transition-[fill,stroke,opacity] duration-300"
             :class="animPhase >= 1
               ? 'fill-brand-50/70 stroke-brand-500 dark:fill-brand-500/15 dark:stroke-brand-500/60'
               : 'fill-slate-50 stroke-slate-200 dark:fill-slate-900 dark:stroke-slate-700'"
@@ -541,11 +541,11 @@ onBeforeUnmount(stopTimer)
             width="253"
             height="22"
             rx="6"
-            class="transition-all duration-300"
+            class="transition-[fill,stroke,opacity] duration-300"
             :class="animPhase < 4
               ? 'fill-slate-200/80 dark:fill-slate-800'
               : result.aOutcome === 'COMMIT'
-                ? 'fill-emerald-500'
+                ? 'fill-emerald-700'
                 : 'fill-red-500'"
           />
           <text
@@ -571,7 +571,7 @@ onBeforeUnmount(stopTimer)
           fill="none"
           stroke-width="2.4"
           marker-end="url(#tx-arrow)"
-          class="transition-all duration-300"
+          class="transition-[fill,stroke,opacity] duration-300"
           :class="animPhase >= 2 ? 'stroke-brand-500 text-brand-500 [stroke-dasharray:5_3]' : 'stroke-slate-300 text-slate-300 dark:stroke-slate-700'"
         />
         <text x="378" y="57" text-anchor="middle" class="font-mono text-[10px] font-semibold fill-slate-500 dark:fill-slate-400">
@@ -594,7 +594,7 @@ onBeforeUnmount(stopTimer)
             height="112"
             rx="14"
             stroke-width="1.8"
-            class="transition-all duration-300"
+            class="transition-[fill,stroke,opacity] duration-300"
             :class="animPhase >= 2
               ? innerThrows
                 ? 'fill-red-50/70 stroke-red-400 dark:fill-red-500/15 dark:stroke-red-400'
@@ -620,11 +620,11 @@ onBeforeUnmount(stopTimer)
             width="254"
             height="22"
             rx="6"
-            class="transition-all duration-300"
+            class="transition-[fill,stroke,opacity] duration-300"
             :class="animPhase < 4
               ? 'fill-slate-200/80 dark:fill-slate-800'
               : result.bOutcome === 'COMMIT'
-                ? 'fill-emerald-500'
+                ? 'fill-emerald-700'
                 : 'fill-red-500'"
           />
           <text
@@ -658,7 +658,7 @@ onBeforeUnmount(stopTimer)
             rx="10"
             stroke-width="2"
             :class="animPhase >= 4 && result.aOutcome === 'COMMIT'
-              ? 'fill-emerald-50 stroke-emerald-500 dark:fill-emerald-500/15'
+              ? 'fill-emerald-50 stroke-emerald-500 dark:fill-emerald-700/15'
               : result.rollbackOnlyTriggered
                 ? 'fill-red-50 stroke-red-500 dark:fill-red-500/15'
                 : 'fill-brand-50 stroke-brand-500 dark:fill-brand-500/15'"
@@ -687,7 +687,7 @@ onBeforeUnmount(stopTimer)
             rx="10"
             stroke-width="2"
             :class="animPhase >= 4 && result.aOutcome === 'COMMIT'
-              ? 'fill-emerald-50 stroke-emerald-500 dark:fill-emerald-500/15'
+              ? 'fill-emerald-50 stroke-emerald-500 dark:fill-emerald-700/15'
               : animPhase >= 4
                 ? 'fill-red-50 stroke-red-500 dark:fill-red-500/15'
                 : 'fill-brand-50 stroke-brand-500 dark:fill-brand-500/15'"
@@ -707,7 +707,7 @@ onBeforeUnmount(stopTimer)
             rx="10"
             stroke-width="2"
             :class="animPhase >= 3 && result.bOutcome === 'COMMIT'
-              ? 'fill-emerald-50 stroke-emerald-500 dark:fill-emerald-500/15'
+              ? 'fill-emerald-50 stroke-emerald-500 dark:fill-emerald-700/15'
               : animPhase >= 3
                 ? 'fill-red-50 stroke-red-500 dark:fill-red-500/15'
                 : 'fill-indigo-50 stroke-indigo-400 dark:fill-indigo-500/15'"
@@ -730,7 +730,7 @@ onBeforeUnmount(stopTimer)
             rx="10"
             stroke-width="2"
             :class="animPhase >= 4 && result.aOutcome === 'COMMIT'
-              ? 'fill-emerald-50 stroke-emerald-500 dark:fill-emerald-500/15'
+              ? 'fill-emerald-50 stroke-emerald-500 dark:fill-emerald-700/15'
               : animPhase >= 4
                 ? 'fill-red-50 stroke-red-500 dark:fill-red-500/15'
                 : 'fill-brand-50 stroke-brand-500 dark:fill-brand-500/15'"
@@ -751,7 +751,7 @@ onBeforeUnmount(stopTimer)
             stroke-width="1.8"
             class="[stroke-dasharray:5_3]"
             :class="innerThrows
-              ? 'fill-amber-50 stroke-amber-500 dark:fill-amber-500/20'
+              ? 'fill-amber-50 stroke-amber-500 dark:fill-amber-700/20'
               : 'fill-indigo-50 stroke-indigo-500 dark:fill-indigo-500/20'"
           />
           <text x="506" y="25" text-anchor="middle" class="font-mono text-[11px] font-bold fill-slate-800 dark:fill-white">
@@ -817,7 +817,7 @@ onBeforeUnmount(stopTimer)
 
       <p class="leading-relaxed text-slate-600 dark:text-slate-300">{{ result.explanation }}</p>
       <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-        <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+        <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
         <span>{{ result.tip }}</span>
       </p>
     </div>

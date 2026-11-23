@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   ChevronLeft,
@@ -8,7 +8,7 @@ import {
   Pause,
   Play,
   RotateCcw,
-  Sparkles,
+  Lightbulb,
   Zap,
 } from 'lucide-vue-next'
 
@@ -284,7 +284,7 @@ function secNodeClass(id: string) {
     return 'fill-brand-600 stroke-brand-700 dark:fill-brand-500 dark:stroke-blue-300'
   }
   if (s.doneSecNodes.includes(id)) {
-    return 'fill-emerald-500 stroke-emerald-600 dark:fill-emerald-500 dark:stroke-emerald-400'
+    return 'fill-emerald-700 stroke-emerald-600 dark:fill-emerald-700 dark:stroke-emerald-400'
   }
   return 'fill-white stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600'
 }
@@ -302,10 +302,10 @@ function priNodeClass(id: string) {
     return 'fill-slate-100/70 stroke-slate-200 opacity-45 dark:fill-slate-900/50 dark:stroke-slate-800'
   }
   if (s.activePriNodes.includes(id)) {
-    return 'fill-amber-500 stroke-amber-600 dark:fill-amber-500 dark:stroke-amber-300'
+    return 'fill-amber-700 stroke-amber-600 dark:fill-amber-700 dark:stroke-amber-300'
   }
   if (s.donePriNodes.includes(id)) {
-    return 'fill-emerald-500 stroke-emerald-600 dark:fill-emerald-500 dark:stroke-emerald-400'
+    return 'fill-emerald-700 stroke-emerald-600 dark:fill-emerald-700 dark:stroke-emerald-400'
   }
   return 'fill-white stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600'
 }
@@ -434,13 +434,13 @@ onBeforeUnmount(stopPlay)
         </text>
 
         <!-- 二级索引连线 -->
-        <path d="M 335 46 L 195 66" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="secEdgeClass('sec-r-b1')" />
-        <path d="M 425 46 L 565 66" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="secEdgeClass('sec-r-b2')" />
+        <path d="M 335 46 L 195 66" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="secEdgeClass('sec-r-b1')" />
+        <path d="M 425 46 L 565 66" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="secEdgeClass('sec-r-b2')" />
 
-        <path d="M 155 94 L 98 116" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="secEdgeClass('sec-b1-l1')" />
-        <path d="M 235 94 L 285 116" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="secEdgeClass('sec-b1-l2')" />
-        <path d="M 525 94 L 472 116" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="secEdgeClass('sec-b2-l3')" />
-        <path d="M 605 94 L 656 116" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="secEdgeClass('sec-b2-l4')" />
+        <path d="M 155 94 L 98 116" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="secEdgeClass('sec-b1-l1')" />
+        <path d="M 235 94 L 285 116" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="secEdgeClass('sec-b1-l2')" />
+        <path d="M 525 94 L 472 116" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="secEdgeClass('sec-b2-l3')" />
+        <path d="M 605 94 L 656 116" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="secEdgeClass('sec-b2-l4')" />
 
         <!-- 叶子双向链表连接 -->
         <path d="M 176 139 L 196 139" stroke-width="1.5" class="stroke-slate-300 dark:stroke-slate-600" />
@@ -449,34 +449,34 @@ onBeforeUnmount(stopPlay)
 
         <!-- idx_name Root -->
         <g>
-          <rect x="315" y="18" width="130" height="28" rx="8" stroke-width="1.6" class="transition-all duration-300" :class="secNodeClass('sec-root')" />
+          <rect x="315" y="18" width="130" height="28" rx="8" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="secNodeClass('sec-root')" />
           <text x="380" y="36" text-anchor="middle" class="font-mono text-[11px] font-semibold" :class="secTextClass('sec-root')">Root: [ Mia ]</text>
         </g>
 
         <!-- idx_name Branch -->
         <g>
-          <rect x="125" y="66" width="140" height="28" rx="8" stroke-width="1.6" class="transition-all duration-300" :class="secNodeClass('sec-b1')" />
+          <rect x="125" y="66" width="140" height="28" rx="8" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="secNodeClass('sec-b1')" />
           <text x="195" y="84" text-anchor="middle" class="font-mono text-[11px] font-semibold" :class="secTextClass('sec-b1')">[ Amy | Bob ]</text>
 
-          <rect x="495" y="66" width="140" height="28" rx="8" stroke-width="1.6" class="transition-all duration-300" :class="secNodeClass('sec-b2')" />
+          <rect x="495" y="66" width="140" height="28" rx="8" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="secNodeClass('sec-b2')" />
           <text x="565" y="84" text-anchor="middle" class="font-mono text-[11px] font-semibold" :class="secTextClass('sec-b2')">[ Sam | Tom ]</text>
         </g>
 
         <!-- idx_name Leaf Pages -->
         <g>
-          <rect x="24" y="116" width="152" height="46" rx="9" stroke-width="1.6" class="transition-all duration-300" :class="secNodeClass('sec-l1')" />
+          <rect x="24" y="116" width="152" height="46" rx="9" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="secNodeClass('sec-l1')" />
           <text x="100" y="135" text-anchor="middle" class="font-mono text-[10.5px] font-semibold" :class="secTextClass('sec-l1')">Amy → id=4</text>
           <text x="100" y="152" text-anchor="middle" class="font-mono text-[10px] opacity-80" :class="secTextClass('sec-l1')">(叶子页 #1)</text>
 
-          <rect x="196" y="116" width="168" height="46" rx="9" stroke-width="1.6" class="transition-all duration-300" :class="secNodeClass('sec-l2')" />
+          <rect x="196" y="116" width="168" height="46" rx="9" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="secNodeClass('sec-l2')" />
           <text x="280" y="135" text-anchor="middle" class="font-mono text-[10.5px] font-semibold" :class="secTextClass('sec-l2')">Bob→9 | Jack→11</text>
           <text x="280" y="152" text-anchor="middle" class="font-mono text-[10px] opacity-80" :class="secTextClass('sec-l2')">(叶子页 #2)</text>
 
-          <rect x="384" y="116" width="168" height="46" rx="9" stroke-width="1.6" class="transition-all duration-300" :class="secNodeClass('sec-l3')" />
+          <rect x="384" y="116" width="168" height="46" rx="9" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="secNodeClass('sec-l3')" />
           <text x="468" y="135" text-anchor="middle" class="font-mono text-[10.5px] font-semibold" :class="secTextClass('sec-l3')">Mia→12 | Sam→15</text>
           <text x="468" y="152" text-anchor="middle" class="font-mono text-[10px] opacity-80" :class="secTextClass('sec-l3')">(叶子页 #3)</text>
 
-          <rect x="572" y="116" width="164" height="46" rx="9" stroke-width="1.8" class="transition-all duration-300" :class="secNodeClass('sec-l4')" />
+          <rect x="572" y="116" width="164" height="46" rx="9" stroke-width="1.8" class="transition-[fill,stroke,opacity] duration-300" :class="secNodeClass('sec-l4')" />
           <text x="654" y="135" text-anchor="middle" class="font-mono text-[10.5px] font-bold" :class="secTextClass('sec-l4')">Tom→18 | Zoe→25</text>
           <text x="654" y="152" text-anchor="middle" class="font-mono text-[10px]" :class="secTextClass('sec-l4')">仅含 name + id</text>
         </g>
@@ -490,14 +490,14 @@ onBeforeUnmount(stopPlay)
             marker-end="url(#bp-arrow)"
             class="stroke-amber-500 text-amber-500 [stroke-dasharray:6_4]"
           />
-          <rect x="444" y="178" width="194" height="22" rx="11" class="fill-amber-500" />
+          <rect x="444" y="178" width="194" height="22" rx="11" class="fill-amber-700" />
           <text x="541" y="193" text-anchor="middle" class="fill-white text-[10.5px] font-semibold">
             回表：携 id=18 查 PRIMARY
           </text>
         </g>
 
         <g v-if="currentStep.showCoveringReturn">
-          <rect x="468" y="177" width="268" height="24" rx="12" class="fill-emerald-500" />
+          <rect x="468" y="177" width="268" height="24" rx="12" class="fill-emerald-700" />
           <text x="602" y="193" text-anchor="middle" class="fill-white text-[10.5px] font-semibold">
             ✓ 覆盖索引命中！直接返回 (18, 'Tom')，跳过回表
           </text>
@@ -511,10 +511,10 @@ onBeforeUnmount(stopPlay)
           height="176"
           rx="14"
           stroke-width="1.5"
-          class="transition-all duration-300"
+          class="transition-[fill,stroke,opacity] duration-300"
           :class="queryMode === 'covering'
             ? 'fill-slate-100/60 stroke-slate-200 opacity-60 dark:fill-slate-900/40 dark:stroke-slate-800'
-            : 'fill-amber-50/35 stroke-amber-200 dark:fill-amber-500/10 dark:stroke-amber-500/30'"
+            : 'fill-amber-50/35 stroke-amber-200 dark:fill-amber-700/10 dark:stroke-amber-500/30'"
         />
         <text
           x="24"
@@ -535,13 +535,13 @@ onBeforeUnmount(stopPlay)
         </text>
 
         <!-- PRIMARY 连线 -->
-        <path d="M 335 246 L 195 266" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="priEdgeClass('pri-r-b1')" />
-        <path d="M 425 246 L 565 266" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="priEdgeClass('pri-r-b2')" />
+        <path d="M 335 246 L 195 266" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="priEdgeClass('pri-r-b1')" />
+        <path d="M 425 246 L 565 266" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="priEdgeClass('pri-r-b2')" />
 
-        <path d="M 155 294 L 98 316" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="priEdgeClass('pri-b1-l1')" />
-        <path d="M 235 294 L 285 316" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="priEdgeClass('pri-b1-l2')" />
-        <path d="M 525 294 L 472 316" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="priEdgeClass('pri-b2-l3')" />
-        <path d="M 605 294 L 656 316" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-all duration-300" :class="priEdgeClass('pri-b2-l4')" />
+        <path d="M 155 294 L 98 316" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="priEdgeClass('pri-b1-l1')" />
+        <path d="M 235 294 L 285 316" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="priEdgeClass('pri-b1-l2')" />
+        <path d="M 525 294 L 472 316" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="priEdgeClass('pri-b2-l3')" />
+        <path d="M 605 294 L 656 316" fill="none" stroke-width="2" marker-end="url(#bp-arrow)" class="transition-[fill,stroke,opacity] duration-300" :class="priEdgeClass('pri-b2-l4')" />
 
         <path d="M 176 342 L 196 342" stroke-width="1.5" class="stroke-slate-300 dark:stroke-slate-700" />
         <path d="M 364 342 L 384 342" stroke-width="1.5" class="stroke-slate-300 dark:stroke-slate-700" />
@@ -549,34 +549,34 @@ onBeforeUnmount(stopPlay)
 
         <!-- PRIMARY Root -->
         <g>
-          <rect x="315" y="218" width="130" height="28" rx="8" stroke-width="1.6" class="transition-all duration-300" :class="priNodeClass('pri-root')" />
+          <rect x="315" y="218" width="130" height="28" rx="8" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="priNodeClass('pri-root')" />
           <text x="380" y="236" text-anchor="middle" class="font-mono text-[11px] font-semibold" :class="priTextClass('pri-root')">Root: [ 12 ]</text>
         </g>
 
         <!-- PRIMARY Branch -->
         <g>
-          <rect x="125" y="266" width="140" height="28" rx="8" stroke-width="1.6" class="transition-all duration-300" :class="priNodeClass('pri-b1')" />
+          <rect x="125" y="266" width="140" height="28" rx="8" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="priNodeClass('pri-b1')" />
           <text x="195" y="284" text-anchor="middle" class="font-mono text-[11px] font-semibold" :class="priTextClass('pri-b1')">[ 4 | 9 ]</text>
 
-          <rect x="495" y="266" width="140" height="28" rx="8" stroke-width="1.6" class="transition-all duration-300" :class="priNodeClass('pri-b2')" />
+          <rect x="495" y="266" width="140" height="28" rx="8" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="priNodeClass('pri-b2')" />
           <text x="565" y="284" text-anchor="middle" class="font-mono text-[11px] font-semibold" :class="priTextClass('pri-b2')">[ 15 | 18 ]</text>
         </g>
 
         <!-- PRIMARY Leaf Pages -->
         <g>
-          <rect x="24" y="316" width="152" height="54" rx="9" stroke-width="1.6" class="transition-all duration-300" :class="priNodeClass('pri-l1')" />
+          <rect x="24" y="316" width="152" height="54" rx="9" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="priNodeClass('pri-l1')" />
           <text x="100" y="337" text-anchor="middle" class="font-mono text-[10.5px] font-semibold" :class="priTextClass('pri-l1')">id=4 (Amy)</text>
           <text x="100" y="354" text-anchor="middle" class="font-mono text-[9.5px] opacity-85" :class="priTextClass('pri-l1')">age=21, city='BJ'</text>
 
-          <rect x="196" y="316" width="168" height="54" rx="9" stroke-width="1.6" class="transition-all duration-300" :class="priNodeClass('pri-l2')" />
+          <rect x="196" y="316" width="168" height="54" rx="9" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="priNodeClass('pri-l2')" />
           <text x="280" y="337" text-anchor="middle" class="font-mono text-[10.5px] font-semibold" :class="priTextClass('pri-l2')">id=9, id=11</text>
           <text x="280" y="354" text-anchor="middle" class="font-mono text-[9.5px] opacity-85" :class="priTextClass('pri-l2')">完整行数据 (Bob/Jack)</text>
 
-          <rect x="384" y="316" width="168" height="54" rx="9" stroke-width="1.6" class="transition-all duration-300" :class="priNodeClass('pri-l3')" />
+          <rect x="384" y="316" width="168" height="54" rx="9" stroke-width="1.6" class="transition-[fill,stroke,opacity] duration-300" :class="priNodeClass('pri-l3')" />
           <text x="468" y="337" text-anchor="middle" class="font-mono text-[10.5px] font-semibold" :class="priTextClass('pri-l3')">id=12, id=15</text>
           <text x="468" y="354" text-anchor="middle" class="font-mono text-[9.5px] opacity-85" :class="priTextClass('pri-l3')">完整行数据 (Mia/Sam)</text>
 
-          <rect x="572" y="316" width="164" height="54" rx="9" stroke-width="1.8" class="transition-all duration-300" :class="priNodeClass('pri-l4')" />
+          <rect x="572" y="316" width="164" height="54" rx="9" stroke-width="1.8" class="transition-[fill,stroke,opacity] duration-300" :class="priNodeClass('pri-l4')" />
           <text x="654" y="337" text-anchor="middle" class="font-mono text-[10.5px] font-bold" :class="priTextClass('pri-l4')">id=18 (Tom) | id=25</text>
           <text x="654" y="354" text-anchor="middle" class="font-mono text-[9.5px]" :class="priTextClass('pri-l4')">18, Tom, 26, 'SH'</text>
         </g>
@@ -593,7 +593,7 @@ onBeforeUnmount(stopPlay)
       </div>
       <p class="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">{{ currentStep.speech }}</p>
       <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-        <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+        <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
         <span>{{ currentStep.tip }}</span>
       </p>
     </div>
@@ -604,7 +604,7 @@ onBeforeUnmount(stopPlay)
         <button
           v-for="(_, i) in steps"
           :key="i"
-          class="h-2 rounded-full transition-all"
+          class="h-2 rounded-full transition-[width,background-color] duration-200"
           :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
           :title="`第 ${i + 1} 步`"
           @click="stopPlay(); stepIdx = i"

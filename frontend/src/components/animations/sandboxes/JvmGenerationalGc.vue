@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   ChevronLeft,
@@ -8,7 +8,7 @@ import {
   Play,
   Plus,
   RotateCcw,
-  Sparkles,
+  Lightbulb,
   Trash2,
   TriangleAlert,
   Zap,
@@ -449,9 +449,9 @@ function cardStyle(obj: HeapObj, isOld = false) {
     return 'border-purple-400 bg-purple-500 text-white shadow-xs dark:border-purple-400 dark:bg-purple-600'
   }
   if (isOld) {
-    return 'border-amber-500 bg-amber-500 text-white shadow-xs dark:border-amber-400 dark:bg-amber-600'
+    return 'border-amber-500 bg-amber-700 text-white shadow-xs dark:border-amber-400 dark:bg-amber-600'
   }
-  return 'border-emerald-500 bg-emerald-500 text-white shadow-xs dark:border-emerald-400 dark:bg-emerald-600'
+  return 'border-emerald-500 bg-emerald-700 text-white shadow-xs dark:border-emerald-400 dark:bg-emerald-600'
 }
 </script>
 
@@ -670,7 +670,7 @@ function cardStyle(obj: HeapObj, isOld = false) {
         <p class="font-semibold text-slate-900 dark:text-white">{{ currentGuided.title }}</p>
         <p class="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">{{ currentGuided.speech }}</p>
         <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-          <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+          <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
           <span>{{ currentGuided.tip }}</span>
         </p>
       </div>
@@ -680,7 +680,7 @@ function cardStyle(obj: HeapObj, isOld = false) {
           <button
             v-for="(_, i) in guidedSteps"
             :key="i"
-            class="h-2 rounded-full transition-all"
+            class="h-2 rounded-full transition-[width,background-color] duration-200"
             :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
             :title="`第 ${i + 1} 步`"
             @click="stopPlay(); stepIdx = i"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
-  CheckCircle2, ChevronLeft, ChevronRight, Pause, Play, Plus, RotateCcw, Sparkles, TriangleAlert,
+  CheckCircle2, ChevronLeft, ChevronRight, Lightbulb, Pause, Play, Plus, RotateCcw, TriangleAlert,
 } from 'lucide-vue-next'
 
 type Mode = 'guided' | 'sandbox'
@@ -93,7 +93,6 @@ const stepIdx = ref(0)
 const playing = ref(false)
 let playTimer: number | undefined
 
-// 沙盒模式状态
 const nextTaskNo = ref(1)
 const sbCore = ref<(string | null)[]>([null, null])
 const sbQueue = ref<string[]>([])
@@ -140,11 +139,8 @@ function togglePlay() {
   if (stepIdx.value >= guidedSteps.length - 1) stepIdx.value = 0
   playing.value = true
   playTimer = window.setInterval(() => {
-    if (stepIdx.value < guidedSteps.length - 1) {
-      stepIdx.value += 1
-    } else {
-      stopPlay()
-    }
+    if (stepIdx.value < guidedSteps.length - 1) stepIdx.value += 1
+    else stopPlay()
   }, 2400)
 }
 
@@ -252,19 +248,20 @@ onBeforeUnmount(stopPlay)
 
 <template>
   <div class="space-y-4">
-    <!-- 模式切换 -->
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <div class="inline-flex rounded-xl border border-slate-200 bg-slate-100/80 p-0.5 text-xs dark:border-slate-700 dark:bg-slate-800">
+      <div class="inline-flex rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-0.5 text-xs">
         <button
-          class="rounded-lg px-3 py-1.5 font-medium transition"
-          :class="mode === 'guided' ? 'bg-white text-brand-700 shadow-xs dark:bg-slate-900 dark:text-brand-300' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+          type="button"
+          class="rounded-md px-3 py-1.5 font-medium transition-colors"
+          :class="mode === 'guided' ? 'bg-[var(--bg-surface)] text-[#C84B31] dark:text-[#E06246]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
           @click="switchMode('guided')"
         >
           标准流程演练 (6 步)
         </button>
         <button
-          class="rounded-lg px-3 py-1.5 font-medium transition"
-          :class="mode === 'sandbox' ? 'bg-white text-brand-700 shadow-xs dark:bg-slate-900 dark:text-brand-300' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+          type="button"
+          class="rounded-md px-3 py-1.5 font-medium transition-colors"
+          :class="mode === 'sandbox' ? 'bg-[var(--bg-surface)] text-[#C84B31] dark:text-[#E06246]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
           @click="switchMode('sandbox')"
         >
           动手提交沙盒
@@ -273,20 +270,16 @@ onBeforeUnmount(stopPlay)
 
       <span
         v-if="mode === 'guided'"
-        class="rounded-full bg-brand-100/80 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300"
+        class="rounded border border-[#EFC9BF] bg-[#FBF0ED] px-2 py-0.5 font-mono text-[11px] font-semibold tabular-nums text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]"
       >
         {{ currentGuided.badge }} · {{ stepIdx + 1 }}/{{ guidedSteps.length }}
       </span>
-      <span
-        v-else
-        class="font-mono text-[11px] text-slate-400"
-      >
+      <span v-else class="font-mono text-[11px] tabular-nums text-[var(--text-muted)]">
         核心 {{ cur.core.filter(Boolean).length }}/2 · 队列 {{ cur.queue.length }}/2 · 非核心 {{ cur.extra.filter(Boolean).length }}/2
       </span>
     </div>
 
-    <!-- SVG 交互流程图 -->
-    <div class="overflow-x-auto rounded-xl border border-slate-200/80 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/70">
+    <div class="overflow-x-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-3">
       <svg viewBox="0 0 760 285" class="mx-auto w-full min-w-[580px] max-w-[740px] select-none" role="img" aria-label="ThreadPoolExecutor 执行流程动画">
         <defs>
           <marker id="tp-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -294,82 +287,75 @@ onBeforeUnmount(stopPlay)
           </marker>
         </defs>
 
-        <!-- 连线：submit -> 核心线程 -->
         <path
           d="M 115 142 C 160 142, 165 56, 225 56"
           fill="none"
-          stroke-width="2.5"
+          stroke-width="2.4"
           marker-end="url(#tp-arrow)"
-          class="transition-all duration-300"
-          :class="cur.activePath === 'core' ? 'text-emerald-500 stroke-emerald-500 [stroke-dasharray:6_4]' : 'text-slate-300 stroke-slate-300 dark:text-slate-700 dark:stroke-slate-700'"
+          class="transition-[stroke,opacity] duration-300"
+          :class="cur.activePath === 'core' ? 'text-emerald-700 stroke-emerald-700 [stroke-dasharray:6_4]' : 'text-[#D4D0C5] stroke-[#D4D0C5] dark:text-[#3B3933] dark:stroke-[#3B3933]'"
         />
-        <!-- 连线：submit -> 阻塞队列 -->
         <path
           d="M 115 142 L 225 142"
           fill="none"
-          stroke-width="2.5"
+          stroke-width="2.4"
           marker-end="url(#tp-arrow)"
-          class="transition-all duration-300"
-          :class="cur.activePath === 'queue' ? 'text-brand-500 stroke-brand-500 [stroke-dasharray:6_4]' : 'text-slate-300 stroke-slate-300 dark:text-slate-700 dark:stroke-slate-700'"
+          class="transition-[stroke,opacity] duration-300"
+          :class="cur.activePath === 'queue' ? 'text-brand-500 stroke-brand-500 [stroke-dasharray:6_4]' : 'text-[#D4D0C5] stroke-[#D4D0C5] dark:text-[#3B3933] dark:stroke-[#3B3933]'"
         />
-        <!-- 连线：submit -> 非核心线程 -->
         <path
           d="M 115 142 C 160 142, 165 228, 225 228"
           fill="none"
-          stroke-width="2.5"
+          stroke-width="2.4"
           marker-end="url(#tp-arrow)"
-          class="transition-all duration-300"
-          :class="cur.activePath === 'extra' ? 'text-amber-500 stroke-amber-500 [stroke-dasharray:6_4]' : 'text-slate-300 stroke-slate-300 dark:text-slate-700 dark:stroke-slate-700'"
+          class="transition-[stroke,opacity] duration-300"
+          :class="cur.activePath === 'extra' ? 'text-amber-700 stroke-amber-700 [stroke-dasharray:6_4]' : 'text-[#D4D0C5] stroke-[#D4D0C5] dark:text-[#3B3933] dark:stroke-[#3B3933]'"
         />
-        <!-- 连线：队列 -> 核心线程（拉取执行） -->
         <path
           d="M 355 110 L 355 92"
           fill="none"
           stroke-width="2"
           marker-end="url(#tp-arrow)"
-          class="transition-all duration-300"
-          :class="cur.activePath === 'drain' ? 'text-emerald-500 stroke-emerald-500' : 'text-slate-300 stroke-slate-300 dark:text-slate-700 dark:stroke-slate-700'"
+          class="transition-[stroke,opacity] duration-300"
+          :class="cur.activePath === 'drain' ? 'text-emerald-700 stroke-emerald-700' : 'text-[#D4D0C5] stroke-[#D4D0C5] dark:text-[#3B3933] dark:stroke-[#3B3933]'"
         />
-        <!-- 连线：饱和 -> 拒绝策略 -->
         <path
           d="M 485 142 L 560 142"
           fill="none"
-          stroke-width="2.5"
+          stroke-width="2.4"
           marker-end="url(#tp-arrow)"
-          class="transition-all duration-300"
-          :class="cur.activePath === 'reject' ? 'text-red-500 stroke-red-500 [stroke-dasharray:6_4]' : 'text-slate-300 stroke-slate-300 dark:text-slate-700 dark:stroke-slate-700'"
+          class="transition-[stroke,opacity] duration-300"
+          :class="cur.activePath === 'reject' ? 'text-red-700 stroke-red-700 [stroke-dasharray:6_4]' : 'text-[#D4D0C5] stroke-[#D4D0C5] dark:text-[#3B3933] dark:stroke-[#3B3933]'"
         />
 
-        <!-- 左侧入口：execute(task) -->
         <g transform="translate(15, 108)">
-          <rect width="100" height="68" rx="14" class="fill-slate-100 stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-700" stroke-width="1.5" />
-          <text x="50" y="30" text-anchor="middle" class="fill-slate-800 text-[12px] font-semibold dark:fill-slate-100">execute()</text>
-          <text x="50" y="48" text-anchor="middle" class="fill-slate-400 text-[10px]">提交任务入口</text>
+          <rect width="100" height="68" rx="12" class="fill-[#F4F2EC] stroke-[#D4D0C5] dark:fill-[#22211E] dark:stroke-[#3B3933]" stroke-width="1.5" />
+          <text x="50" y="30" text-anchor="middle" class="fill-[#161614] text-[12px] font-semibold dark:fill-[#ECEAE4]">execute()</text>
+          <text x="50" y="48" text-anchor="middle" class="fill-[#736E64] text-[10px] dark:fill-[#A8A397]">提交任务入口</text>
         </g>
 
-        <!-- 区域 1：核心线程池 -->
         <g transform="translate(230, 14)">
           <rect
             width="250"
             height="76"
-            rx="14"
-            stroke-width="1.8"
-            class="transition-all duration-300"
+            rx="12"
+            stroke-width="1.6"
+            class="transition-[fill,stroke] duration-300"
             :class="cur.activePath === 'core' || cur.activePath === 'drain'
-              ? 'fill-emerald-50/90 stroke-emerald-400 dark:fill-emerald-500/15 dark:stroke-emerald-400'
-              : 'fill-slate-50 stroke-slate-200 dark:fill-slate-900 dark:stroke-slate-700'"
+              ? 'fill-emerald-50 stroke-emerald-400 dark:fill-emerald-950/40 dark:stroke-emerald-600'
+              : 'fill-[#F4F2EC] stroke-[#E5E2DA] dark:fill-[#1A1917] dark:stroke-[#2B2A26]'"
           />
-          <text x="14" y="22" class="fill-emerald-700 text-[11px] font-semibold dark:fill-emerald-300">① 核心线程 corePoolSize = 2</text>
+          <text x="14" y="22" class="fill-emerald-800 text-[11px] font-semibold dark:fill-emerald-300">① 核心线程 corePoolSize = 2</text>
           <g v-for="(slot, idx) in cur.core" :key="`core-${idx}`" :transform="`translate(${16 + idx * 112}, 32)`">
             <rect
               width="102"
               height="32"
               rx="8"
               stroke-width="1.5"
-              class="transition-all duration-300"
+              class="transition-[fill,stroke] duration-300"
               :class="slot
-                ? 'fill-emerald-500 stroke-emerald-600'
-                : 'fill-white stroke-dashed stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600'"
+                ? 'fill-emerald-700 stroke-emerald-800'
+                : 'fill-white stroke-[#D4D0C5] dark:fill-[#22211E] dark:stroke-[#3B3933]'"
               :stroke-dasharray="slot ? undefined : '4 3'"
             />
             <text
@@ -377,24 +363,23 @@ onBeforeUnmount(stopPlay)
               y="20"
               text-anchor="middle"
               class="text-[11px] font-semibold"
-              :class="slot ? 'fill-white' : 'fill-slate-400'"
+              :class="slot ? 'fill-white' : 'fill-[#736E64] dark:fill-[#A8A397]'"
             >
               {{ slot ? `Core#${idx + 1} · ${slot}` : `Core#${idx + 1} 空闲` }}
             </text>
           </g>
         </g>
 
-        <!-- 区域 2：阻塞队列 workQueue -->
         <g transform="translate(230, 108)">
           <rect
             width="250"
             height="68"
-            rx="14"
-            stroke-width="1.8"
-            class="transition-all duration-300"
+            rx="12"
+            stroke-width="1.6"
+            class="transition-[fill,stroke] duration-300"
             :class="cur.activePath === 'queue'
-              ? 'fill-brand-50/90 stroke-brand-400 dark:fill-brand-500/15 dark:stroke-brand-400'
-              : 'fill-slate-50 stroke-slate-200 dark:fill-slate-900 dark:stroke-slate-700'"
+              ? 'fill-brand-50 stroke-brand-400 dark:fill-brand-950/40 dark:stroke-brand-600'
+              : 'fill-[#F4F2EC] stroke-[#E5E2DA] dark:fill-[#1A1917] dark:stroke-[#2B2A26]'"
           />
           <text x="14" y="21" class="fill-brand-700 text-[11px] font-semibold dark:fill-brand-300">② 阻塞队列 workQueue (容量 2)</text>
           <g v-for="idx in 2" :key="`q-${idx}`" :transform="`translate(${16 + (idx - 1) * 112}, 29)`">
@@ -403,10 +388,10 @@ onBeforeUnmount(stopPlay)
               height="28"
               rx="8"
               stroke-width="1.5"
-              class="transition-all duration-300"
+              class="transition-[fill,stroke] duration-300"
               :class="cur.queue[idx - 1]
                 ? 'fill-brand-600 stroke-brand-700'
-                : 'fill-white stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600'"
+                : 'fill-white stroke-[#D4D0C5] dark:fill-[#22211E] dark:stroke-[#3B3933]'"
               :stroke-dasharray="cur.queue[idx - 1] ? undefined : '4 3'"
             />
             <text
@@ -414,36 +399,35 @@ onBeforeUnmount(stopPlay)
               y="18"
               text-anchor="middle"
               class="text-[11px] font-semibold"
-              :class="cur.queue[idx - 1] ? 'fill-white' : 'fill-slate-400'"
+              :class="cur.queue[idx - 1] ? 'fill-white' : 'fill-[#736E64] dark:fill-[#A8A397]'"
             >
               {{ cur.queue[idx - 1] ? `排队中 · ${cur.queue[idx - 1]}` : `空槽位 #${idx}` }}
             </text>
           </g>
         </g>
 
-        <!-- 区域 3：非核心线程 -->
         <g transform="translate(230, 194)">
           <rect
             width="250"
             height="76"
-            rx="14"
-            stroke-width="1.8"
-            class="transition-all duration-300"
+            rx="12"
+            stroke-width="1.6"
+            class="transition-[fill,stroke] duration-300"
             :class="cur.activePath === 'extra'
-              ? 'fill-amber-50/90 stroke-amber-400 dark:fill-amber-500/15 dark:stroke-amber-400'
-              : 'fill-slate-50 stroke-slate-200 dark:fill-slate-900 dark:stroke-slate-700'"
+              ? 'fill-amber-50 stroke-amber-400 dark:fill-amber-950/40 dark:stroke-amber-600'
+              : 'fill-[#F4F2EC] stroke-[#E5E2DA] dark:fill-[#1A1917] dark:stroke-[#2B2A26]'"
           />
-          <text x="14" y="22" class="fill-amber-700 text-[11px] font-semibold dark:fill-amber-300">③ 非核心线程 (max - core = 2)</text>
+          <text x="14" y="22" class="fill-amber-800 text-[11px] font-semibold dark:fill-amber-300">③ 非核心线程 (max - core = 2)</text>
           <g v-for="(slot, idx) in cur.extra" :key="`extra-${idx}`" :transform="`translate(${16 + idx * 112}, 32)`">
             <rect
               width="102"
               height="32"
               rx="8"
               stroke-width="1.5"
-              class="transition-all duration-300"
+              class="transition-[fill,stroke] duration-300"
               :class="slot
-                ? 'fill-amber-500 stroke-amber-600'
-                : 'fill-white stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600'"
+                ? 'fill-amber-700 stroke-amber-800'
+                : 'fill-white stroke-[#D4D0C5] dark:fill-[#22211E] dark:stroke-[#3B3933]'"
               :stroke-dasharray="slot ? undefined : '4 3'"
             />
             <text
@@ -451,44 +435,43 @@ onBeforeUnmount(stopPlay)
               y="20"
               text-anchor="middle"
               class="text-[11px] font-semibold"
-              :class="slot ? 'fill-white' : 'fill-slate-400'"
+              :class="slot ? 'fill-white' : 'fill-[#736E64] dark:fill-[#A8A397]'"
             >
               {{ slot ? `Temp#${idx + 1} · ${slot}` : '未创建 / 已回收' }}
             </text>
           </g>
         </g>
 
-        <!-- 右侧：④ 拒绝策略 -->
         <g transform="translate(566, 98)">
           <rect
             width="178"
             height="88"
-            rx="14"
-            stroke-width="1.8"
-            class="transition-all duration-300"
+            rx="12"
+            stroke-width="1.6"
+            class="transition-[fill,stroke] duration-300"
             :class="cur.rejected
-              ? 'fill-red-50 stroke-red-500 dark:fill-red-500/20 dark:stroke-red-400'
-              : 'fill-slate-50 stroke-slate-200 dark:fill-slate-900 dark:stroke-slate-700'"
+              ? 'fill-red-50 stroke-red-600 dark:fill-red-950/40 dark:stroke-red-500'
+              : 'fill-[#F4F2EC] stroke-[#E5E2DA] dark:fill-[#1A1917] dark:stroke-[#2B2A26]'"
           />
-          <text x="89" y="24" text-anchor="middle" class="text-[11px] font-semibold" :class="cur.rejected ? 'fill-red-600 dark:fill-red-300' : 'fill-slate-500 dark:fill-slate-400'">
+          <text x="89" y="24" text-anchor="middle" class="text-[11px] font-semibold" :class="cur.rejected ? 'fill-red-700 dark:fill-red-300' : 'fill-[#5E5A52] dark:fill-[#A8A397]'">
             ④ 拒绝策略
           </text>
-          <text x="89" y="42" text-anchor="middle" class="fill-slate-400 text-[10px]">RejectedExecutionHandler</text>
+          <text x="89" y="42" text-anchor="middle" class="fill-[#736E64] text-[10px] dark:fill-[#8F8A7E]">RejectedExecutionHandler</text>
           <rect
             x="24"
             y="50"
             width="130"
             height="26"
             rx="8"
-            class="transition-all duration-300"
-            :class="cur.rejected ? 'fill-red-500' : 'fill-slate-200/70 dark:fill-slate-800'"
+            class="transition-[fill] duration-300"
+            :class="cur.rejected ? 'fill-red-700' : 'fill-[#E5E2DA] dark:fill-[#2B2A26]'"
           />
           <text
             x="89"
             y="67"
             text-anchor="middle"
             class="text-[11px] font-semibold"
-            :class="cur.rejected ? 'fill-white' : 'fill-slate-400'"
+            :class="cur.rejected ? 'fill-white' : 'fill-[#5E5A52] dark:fill-[#A8A397]'"
           >
             {{ cur.rejected ? `拒绝 ${cur.rejected} (Abort)` : '暂未触发' }}
           </text>
@@ -496,13 +479,12 @@ onBeforeUnmount(stopPlay)
       </svg>
     </div>
 
-    <!-- 模式 A：标准 6 步演练控制栏 + 面试口述卡 -->
     <template v-if="mode === 'guided'">
-      <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 text-sm dark:border-slate-800 dark:bg-slate-900/80">
-        <p class="font-semibold text-slate-900 dark:text-white">{{ currentGuided.title }}</p>
-        <p class="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">{{ currentGuided.speech }}</p>
-        <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-          <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+      <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-3.5 text-sm">
+        <p class="font-semibold text-[var(--text-primary)]">{{ currentGuided.title }}</p>
+        <p class="mt-1.5 leading-relaxed text-[var(--text-secondary)]">{{ currentGuided.speech }}</p>
+        <p class="mt-2.5 flex items-start gap-1.5 rounded-md border border-amber-300/70 bg-amber-50/70 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-700/40 dark:bg-amber-950/35 dark:text-amber-200">
+          <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
           <span>{{ currentGuided.tip }}</span>
         </p>
       </div>
@@ -512,52 +494,55 @@ onBeforeUnmount(stopPlay)
           <button
             v-for="(_, i) in guidedSteps"
             :key="i"
-            class="h-2 rounded-full transition-all"
-            :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
+            type="button"
+            class="h-2 rounded-full transition-[width,background-color] duration-200"
+            :class="i === stepIdx ? 'w-6 bg-[#C84B31] dark:bg-[#E06246]' : 'w-2 bg-[var(--border-strong)] hover:bg-[var(--text-muted)]'"
             :title="`第 ${i + 1} 步`"
+            :aria-label="`跳转到第 ${i + 1} 步`"
             @click="stopPlay(); stepIdx = i"
           />
         </div>
 
         <div class="flex items-center gap-2">
-          <button class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx === 0" @click="prevStep">
+          <button type="button" class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx === 0" @click="prevStep">
             <ChevronLeft class="h-3.5 w-3.5" /> 上一步
           </button>
-          <button class="btn-primary h-8 px-3 text-xs" @click="togglePlay">
+          <button type="button" class="btn-primary h-8 px-3 text-xs" @click="togglePlay">
             <component :is="playing ? Pause : Play" class="h-3.5 w-3.5" />
             {{ playing ? '暂停' : '自动播放' }}
           </button>
-          <button class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx === guidedSteps.length - 1" @click="nextStep">
+          <button type="button" class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx === guidedSteps.length - 1" @click="nextStep">
             下一步 <ChevronRight class="h-3.5 w-3.5" />
           </button>
-          <button class="btn-ghost h-8 px-2 text-xs" title="重置" @click="resetGuided">
+          <button type="button" class="btn-ghost h-8 px-2 text-xs" title="重置" aria-label="重置动画" @click="resetGuided">
             <RotateCcw class="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
     </template>
 
-    <!-- 模式 B：动手提交沙盒控制栏 -->
     <template v-else>
       <div
-        class="flex items-start gap-2 rounded-xl border px-3.5 py-2.5 text-xs leading-relaxed"
-        :class="sbRejected
-          ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300'
-          : 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'"
+        class="flex items-start gap-2 rounded-lg border px-3.5 py-2.5 text-xs leading-relaxed"
+        :class="
+          sbRejected
+            ? 'border-red-300 bg-red-50 text-red-800 dark:border-red-700/50 dark:bg-red-950/40 dark:text-red-200'
+            : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'
+        "
       >
-        <TriangleAlert v-if="sbRejected" class="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-        <CheckCircle2 v-else class="mt-0.5 h-4 w-4 shrink-0 text-brand-500" />
+        <TriangleAlert v-if="sbRejected" class="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+        <CheckCircle2 v-else class="mt-0.5 h-4 w-4 shrink-0 text-[#C84B31] dark:text-[#E06246]" />
         <span>{{ sbLog }}</span>
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <button class="btn-primary h-9 px-3.5 text-xs" @click="submitSandboxTask">
+        <button type="button" class="btn-primary h-9 px-3.5 text-xs" @click="submitSandboxTask">
           <Plus class="h-3.5 w-3.5" /> 提交新任务 (T{{ nextTaskNo }})
         </button>
-        <button class="btn-ghost h-9 px-3 text-xs" :disabled="!hasBusyThread" @click="finishOneTask">
-          <CheckCircle2 class="h-3.5 w-3.5 text-emerald-500" /> 模拟完成 1 个任务
+        <button type="button" class="btn-ghost h-9 px-3 text-xs" :disabled="!hasBusyThread" @click="finishOneTask">
+          <CheckCircle2 class="h-3.5 w-3.5 text-[#2E6F5E] dark:text-[#4FA58E]" /> 模拟完成 1 个任务
         </button>
-        <button class="btn-ghost ml-auto h-9 px-3 text-xs" @click="resetSandbox">
+        <button type="button" class="btn-ghost ml-auto h-9 px-3 text-xs" @click="resetSandbox">
           <RotateCcw class="h-3.5 w-3.5" /> 重置沙盒
         </button>
       </div>

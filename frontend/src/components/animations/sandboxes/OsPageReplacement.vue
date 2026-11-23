@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   CheckCircle2,
@@ -7,7 +7,7 @@ import {
   Pause,
   Play,
   RotateCcw,
-  Sparkles,
+  Lightbulb,
   XCircle,
 } from 'lucide-vue-next'
 
@@ -250,7 +250,7 @@ function seqItemClass(idx: number) {
   const s = trace.value[stepNum]
   if (stepNum === cursor.value) {
     return s?.outcome === 'hit'
-      ? 'border-emerald-500 bg-emerald-500 text-white ring-2 ring-emerald-300 dark:ring-emerald-500/40'
+      ? 'border-emerald-500 bg-emerald-700 text-white ring-2 ring-emerald-300 dark:ring-emerald-500/40'
       : 'border-red-500 bg-red-500 text-white ring-2 ring-red-300 dark:ring-red-500/40'
   }
   if (stepNum < cursor.value) {
@@ -268,7 +268,7 @@ function frameCardClass(idx: number) {
   const cur = current.value
   if (cur.activeFrameIdx === idx) {
     return cur.outcome === 'hit'
-      ? 'fill-emerald-500 stroke-emerald-600'
+      ? 'fill-emerald-700 stroke-emerald-600'
       : 'fill-red-500 stroke-red-600'
   }
   if (cur.frames[idx] === null) {
@@ -370,7 +370,7 @@ onBeforeUnmount(stopPlay)
             height="126"
             rx="14"
             stroke-width="2"
-            class="transition-all duration-300"
+            class="transition-[fill,stroke,opacity] duration-300"
             :class="frameCardClass(idx - 1)"
           />
           <text
@@ -452,9 +452,9 @@ onBeforeUnmount(stopPlay)
             :y2="clockCenter.y + (handTarget.y - clockCenter.y) * 0.58"
             stroke-width="3"
             marker-end="url(#clk-arrow)"
-            class="stroke-amber-500 text-amber-500 transition-all duration-300"
+            class="stroke-amber-500 text-amber-500 transition-[fill,stroke,opacity] duration-300"
           />
-          <circle :cx="clockCenter.x" :cy="clockCenter.y" r="5" class="fill-amber-500" />
+          <circle :cx="clockCenter.x" :cy="clockCenter.y" r="5" class="fill-amber-700" />
           <!-- 3 个环形节点 -->
           <g v-for="cn in clockNodes" :key="`cn-${cn.idx}`">
             <circle
@@ -462,9 +462,9 @@ onBeforeUnmount(stopPlay)
               :cy="cn.y"
               r="22"
               stroke-width="2"
-              class="transition-all duration-300"
+              class="transition-[fill,stroke,opacity] duration-300"
               :class="current.hand === cn.idx
-                ? 'fill-amber-50 stroke-amber-500 dark:fill-amber-500/20'
+                ? 'fill-amber-50 stroke-amber-500 dark:fill-amber-700/20'
                 : 'fill-white stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600'"
             />
             <text :x="cn.x" :y="cn.y - 2" text-anchor="middle" class="font-mono text-[11px] font-bold fill-slate-800 dark:fill-white">
@@ -499,7 +499,7 @@ onBeforeUnmount(stopPlay)
               height="68"
               rx="10"
               stroke-width="1.8"
-              :class="pos === 0 ? 'fill-amber-50 stroke-amber-400 dark:fill-amber-500/15' : 'fill-white stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600'"
+              :class="pos === 0 ? 'fill-amber-50 stroke-amber-400 dark:fill-amber-700/15' : 'fill-white stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600'"
             />
             <text x="33" y="22" text-anchor="middle" class="font-mono text-[9.5px] fill-slate-400">F#{{ frameIdx }}</text>
             <text x="33" y="46" text-anchor="middle" class="font-mono text-[18px] font-bold fill-slate-800 dark:fill-white">
@@ -541,7 +541,7 @@ onBeforeUnmount(stopPlay)
       </div>
       <p class="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">{{ current.explanation }}</p>
       <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-        <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+        <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
         <span>{{ algoDescriptions[activeAlgo] }}（小知识：本序列在 FIFO 下若把页框增加到 4 个，缺页次数反而从 9 次升到 10 次，即著名的 Belady 异常！）</span>
       </p>
     </div>

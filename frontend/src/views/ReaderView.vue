@@ -2,9 +2,10 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  ChevronDown, Eye, EyeOff, Flame, List, NotebookPen, Play, Sparkles, Star, X, Zap,
+  ChevronDown, Clapperboard, Eye, EyeOff, Flame, List, NotebookPen, Play, RefreshCw, Star, TriangleAlert, X, Zap,
 } from 'lucide-vue-next'
 import { knowledgeApi, studyApi } from '@/api'
+import { useUiStore } from '@/stores/ui'
 import MarkdownView from '@/components/common/MarkdownView.vue'
 import QuestionAnimation from '@/components/animations/QuestionAnimation.vue'
 import PriorityBadge from '@/components/common/PriorityBadge.vue'
@@ -14,16 +15,19 @@ import type { ModuleMeta, QuestionWithProgress } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
+const ui = useUiStore()
 
-const modules = ref<ModuleMeta[]>([])
 const moduleMeta = ref<ModuleMeta | null>(null)
 const questions = ref<QuestionWithProgress[]>([])
 const loading = ref(true)
+const loadError = ref('')
 
-// 考前冲刺双开关
+// 阅读控制开关
 const p0Only = ref(false)
 const hideAnswers = ref(false)
+const expandAllAnimations = ref(false)
 const revealedIds = ref(new Set<number>())
+const expandedAnimIds = ref(new Set<number>())
 const activeId = ref<number | null>(null)
 const tocDrawerOpen = ref(false)
 
@@ -59,36 +63,59 @@ function setupObserver() {
 
 async function loadModule(slug: string) {
   loading.value = true
+  loadError.value = ''
   revealedIds.value = new Set()
-  localStorage.setItem('bagu:lastSlug', slug)
+  expandedAnimIds.value = new Set()
+  ui.setLastSlug(slug)
   try {
-    if (!modules.value.length) modules.value = await knowledgeApi.modules()
+    await ui.loadModules().catch(() => {})
     const res = await knowledgeApi.reader(slug)
     moduleMeta.value = res.module
     questions.value = res.questions
     activeId.value = res.questions[0]?.id ?? null
     await nextTick()
     setupObserver()
-    if (route.hash) {
-      const target = document.getElementById(route.hash.slice(1))
-      if (target) {
-        const id = Number(target.id)
-        if (hideAnswers.value && !Number.isNaN(id)) revealedIds.value.add(id)
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+    const targetIdStr = (route.query.q as string) || (route.hash ? route.hash.slice(1) : '')
+    if (targetIdStr) {
+      const id = Number(targetIdStr)
+      if (!Number.isNaN(id)) {
+        if (hideAnswers.value) revealedIds.value.add(id)
+        expandedAnimIds.value.add(id)
+        await nextTick()
+        const target = document.getElementById(String(id))
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          activeId.value = id
+        }
       }
     }
+  } catch (e) {
+    loadError.value = (e as Error).message || '加载章节内容失败，请检查网络连接'
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => loadModule(currentSlug.value))
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && tocDrawerOpen.value) {
+    tocDrawerOpen.value = false
+  }
+}
+
+onMounted(() => {
+  loadModule(currentSlug.value)
+  window.addEventListener('keydown', onKeydown)
+})
 watch(currentSlug, (slug) => loadModule(slug))
 watch(p0Only, async () => {
   await nextTick()
   setupObserver()
 })
-onBeforeUnmount(() => observer?.disconnect())
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  window.removeEventListener('keydown', onKeydown)
+})
 
 function isAnswerShown(id: number) {
   return !hideAnswers.value || revealedIds.value.has(id)
@@ -99,6 +126,17 @@ function toggleAnswer(id: number) {
   if (next.has(id)) next.delete(id)
   else next.add(id)
   revealedIds.value = next
+}
+
+function isAnimExpanded(id: number) {
+  return expandAllAnimations.value || expandedAnimIds.value.has(id)
+}
+
+function toggleAnim(id: number) {
+  const next = new Set(expandedAnimIds.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  expandedAnimIds.value = next
 }
 
 function scrollToQuestion(id: number) {
@@ -128,49 +166,73 @@ async function onToggleStar(q: QuestionWithProgress) {
 
 <template>
   <div class="space-y-5">
-    <!-- 顶部吸顶考前冲刺工具栏 -->
-    <div class="sticky top-14 z-20 -mx-4 border-b border-slate-200 bg-slate-50/90 px-4 py-2.5 backdrop-blur lg:top-16 lg:-mx-8 lg:px-8 dark:border-slate-800 dark:bg-ink-950/90">
-      <div class="mx-auto flex max-w-[1280px] flex-wrap items-center gap-2.5">
+    <!-- 顶部吸顶手稿工具栏 -->
+    <div class="sticky top-14 z-20 -mx-4 border-b border-[var(--border-default)] bg-[var(--bg-canvas)]/92 px-4 py-2.5 backdrop-blur-sm lg:top-16 lg:-mx-8 lg:px-8">
+      <div class="mx-auto flex max-w-[1240px] flex-wrap items-center gap-2">
         <div class="relative">
           <select
             :value="currentSlug"
-            class="h-9 appearance-none rounded-xl border border-slate-200 bg-white pl-3 pr-8 text-sm font-medium outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-900"
+            aria-label="选择知识模块"
+            class="h-9 appearance-none rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] pl-3 pr-8 text-sm font-medium text-[var(--text-primary)] outline-none transition-colors focus:border-[#C84B31]"
             @change="switchModule"
           >
-            <option v-for="m in modules" :key="m.slug" :value="m.slug">
+            <option v-for="m in ui.modules" :key="m.slug" :value="m.slug">
               {{ String(m.order).padStart(2, '0') }} {{ m.title }} ({{ m.questionCount }})
             </option>
           </select>
-          <ChevronDown class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <ChevronDown class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
         </div>
 
-        <!-- 仅看 P0 必背开关 -->
         <button
-          class="inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-medium transition"
-          :class="p0Only
-            ? 'border-red-300 bg-red-50 text-red-600 dark:border-red-500/40 dark:bg-red-500/15 dark:text-red-300'
-            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'"
+          type="button"
+          class="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors"
+          :class="
+            p0Only
+              ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
+              : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
+          "
           @click="p0Only = !p0Only"
         >
           <Flame class="h-3.5 w-3.5" />
           仅看 P0 必背
-          <span v-if="moduleMeta" class="tabular-nums opacity-75">({{ moduleMeta.p0Count }})</span>
+          <span v-if="moduleMeta" class="font-mono tabular-nums opacity-75">({{ moduleMeta.p0Count }})</span>
         </button>
 
-        <!-- 自测隐藏答案开关 -->
         <button
-          class="inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-medium transition"
-          :class="hideAnswers
-            ? 'border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-500/40 dark:bg-brand-500/15 dark:text-brand-200'
-            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'"
+          type="button"
+          class="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors"
+          :class="
+            hideAnswers
+              ? 'border-[#C84B31] bg-[#C84B31] text-white'
+              : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
+          "
           @click="hideAnswers = !hideAnswers; revealedIds = new Set()"
         >
           <component :is="hideAnswers ? EyeOff : Eye" class="h-3.5 w-3.5" />
           {{ hideAnswers ? '自测模式（已藏答案）' : '隐藏答案自测' }}
         </button>
 
+        <button
+          type="button"
+          class="hidden h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors sm:inline-flex"
+          :class="
+            expandAllAnimations
+              ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
+              : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
+          "
+          @click="expandAllAnimations = !expandAllAnimations"
+        >
+          <Clapperboard class="h-3.5 w-3.5" />
+          {{ expandAllAnimations ? '收起全部推演' : '展开全部动画' }}
+        </button>
+
         <div class="ml-auto flex items-center gap-2">
-          <button class="btn-ghost h-9 px-3 text-xs xl:hidden" @click="tocDrawerOpen = true">
+          <button
+            type="button"
+            class="btn-ghost h-9 px-3 text-xs xl:hidden"
+            aria-label="打开本篇章节目录"
+            @click="tocDrawerOpen = true"
+          >
             <List class="h-4 w-4" /> 目录
           </button>
           <RouterLink
@@ -185,21 +247,29 @@ async function onToggleStar(q: QuestionWithProgress) {
 
     <!-- 骨架屏 -->
     <div v-if="loading" class="space-y-4 animate-pulse">
-      <div class="h-32 rounded-2xl bg-slate-200/70 dark:bg-slate-800/70" />
-      <div v-for="i in 3" :key="i" class="h-64 rounded-2xl bg-slate-200/70 dark:bg-slate-800/70" />
+      <div class="h-28 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]" />
+      <div class="h-96 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]" />
     </div>
 
-    <!-- 主体 + 右侧吸顶大纲 -->
+    <!-- 错误态 -->
+    <div v-else-if="loadError" class="card flex flex-col items-center justify-center px-6 py-16 text-center">
+      <TriangleAlert class="h-9 w-9 text-[#C84B31] dark:text-[#E06246]" />
+      <p class="mt-3 text-sm font-medium text-[var(--text-primary)]">{{ loadError }}</p>
+      <button type="button" class="btn-primary mt-4 h-9 text-xs" @click="loadModule(currentSlug)">
+        <RefreshCw class="h-3.5 w-3.5" /> 重试加载
+      </button>
+    </div>
+
+    <!-- 工程手稿连续正文 + 右侧吸顶目录 -->
     <div v-else-if="moduleMeta" class="flex items-start gap-7">
-      <!-- 左侧通读正文 -->
       <div class="min-w-0 max-w-[820px] flex-1 space-y-6">
-        <!-- 模块头说明卡 -->
+        <!-- 卷首导读卡 -->
         <section class="card p-5 sm:p-7">
           <div class="flex items-start gap-3.5">
-            <ModuleIcon :icon="moduleMeta.icon" />
+            <ModuleIcon :icon="moduleMeta.icon" :slug="moduleMeta.slug" :order="moduleMeta.order" active />
             <div class="min-w-0 flex-1">
-              <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">{{ moduleMeta.fullTitle }}</h1>
-              <p v-if="moduleMeta.description" class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+              <h1 class="text-xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-2xl">{{ moduleMeta.fullTitle }}</h1>
+              <p v-if="moduleMeta.description" class="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
                 {{ moduleMeta.description }}
               </p>
             </div>
@@ -207,113 +277,154 @@ async function onToggleStar(q: QuestionWithProgress) {
 
           <div
             v-if="moduleMeta.sprintGuide"
-            class="mt-4 flex items-start gap-2.5 rounded-xl border border-amber-200/80 bg-amber-50/70 px-4 py-3 text-xs leading-relaxed text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200"
+            class="mt-4 rounded-lg border border-amber-300/80 bg-amber-50/70 px-4 py-3 text-xs leading-relaxed text-amber-950 dark:border-amber-700/40 dark:bg-amber-950/30 dark:text-amber-200"
           >
-            <Sparkles class="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-            <span>{{ moduleMeta.sprintGuide }}</span>
+            <strong class="mr-1.5 font-semibold">考前冲刺建议：</strong>{{ moduleMeta.sprintGuide }}
           </div>
         </section>
 
-        <!-- 按篇目分组的题目列表 -->
-        <section v-for="ch in groupedChapters" :key="ch.id" class="space-y-4">
-          <div class="flex items-center gap-3 pt-2">
-            <span class="h-5 w-1.5 rounded-full bg-brand-600" />
-            <h2 class="text-base font-semibold text-slate-900 sm:text-lg dark:text-white">{{ ch.title }}</h2>
-            <span class="shrink-0 text-xs text-slate-400">{{ ch.items.length }} 题</span>
+        <!-- 按篇目分组的连续手稿纸面（无卡片嵌套） -->
+        <section v-for="ch in groupedChapters" :key="ch.id" class="space-y-3">
+          <div class="flex items-center justify-between border-b border-[var(--border-strong)] pb-2 pt-2">
+            <h2 class="text-base font-semibold text-[var(--text-primary)] sm:text-lg">{{ ch.title }}</h2>
+            <span class="font-mono text-xs tabular-nums text-[var(--text-muted)]">{{ ch.items.length }} 题</span>
           </div>
 
-          <article
-            v-for="q in ch.items"
-            :id="String(q.id)"
-            :key="q.id"
-            data-question-card
-            class="card scroll-mt-32 overflow-hidden"
-          >
-            <div class="flex items-start gap-3 border-b border-slate-100 px-5 py-4 sm:px-7 dark:border-slate-800">
-              <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="font-mono text-xs font-semibold text-brand-600 dark:text-brand-400">{{ q.code }}</span>
-                  <PriorityBadge :priority="q.priority" />
-                  <StatusDot :status="q.progress.status" />
-                </div>
-                <h3 class="mt-1.5 text-base font-semibold leading-snug text-slate-900 sm:text-[17px] dark:text-white">
-                  {{ q.title }}
-                </h3>
-              </div>
-
-              <div class="flex shrink-0 items-center gap-1">
-                <RouterLink
-                  :to="{ name: 'study', query: { mode: 'single', id: q.id } }"
-                  class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800 dark:hover:text-brand-400"
-                  title="以闪卡背诵本题"
-                >
-                  <Zap class="h-4 w-4" />
-                </RouterLink>
-                <button
-                  class="rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-slate-800"
-                  :class="q.progress.isStarred ? 'text-amber-400' : 'text-slate-300 hover:text-amber-400 dark:text-slate-600'"
-                  title="收藏"
-                  @click="onToggleStar(q)"
-                >
-                  <Star class="h-4 w-4" :class="q.progress.isStarred ? 'fill-current' : ''" />
-                </button>
-              </div>
-            </div>
-
-            <!-- 答案区（支持自测折叠） -->
-            <div v-if="isAnswerShown(q.id)" class="px-5 py-5 sm:px-7">
-              <QuestionAnimation v-if="q.animationKey" :animation-key="q.animationKey" class="mb-5" />
-              <MarkdownView :source="q.answerMd" />
-
-              <div
-                v-if="q.progress.personalNote"
-                class="mt-5 flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50/50 px-3.5 py-2.5 text-xs leading-relaxed text-slate-700 dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-slate-300"
-              >
-                <NotebookPen class="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-500" />
-                <span><strong>我的助记：</strong>{{ q.progress.personalNote }}</span>
-              </div>
-
-              <div v-if="hideAnswers" class="mt-4 text-right">
-                <button class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" @click="toggleAnswer(q.id)">
-                  收起答案
-                </button>
-              </div>
-            </div>
-
-            <button
-              v-else
-              class="flex w-full items-center justify-center gap-2 bg-slate-50/70 py-5 text-sm font-medium text-slate-500 transition hover:bg-brand-50/60 hover:text-brand-600 dark:bg-slate-800/30 dark:text-slate-400 dark:hover:bg-brand-500/10 dark:hover:text-brand-300"
-              @click="toggleAnswer(q.id)"
+          <div class="card divide-y divide-[var(--border-default)] overflow-hidden">
+            <article
+              v-for="q in ch.items"
+              :id="String(q.id)"
+              :key="q.id"
+              data-question-card
+              class="scroll-mt-32 p-5 sm:p-7"
             >
-              <Eye class="h-4 w-4" /> 点击展开参考答案自测
-            </button>
-          </article>
+              <!-- 题头元信息 -->
+              <div class="flex items-start gap-3">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-mono text-xs font-semibold text-[#C84B31] dark:text-[#E06246]">§ {{ q.code }}</span>
+                    <PriorityBadge :priority="q.priority" />
+                    <StatusDot :status="q.progress.status" />
+                  </div>
+                  <h3 class="mt-1.5 text-base font-semibold leading-snug text-[var(--text-primary)] sm:text-[17px]">
+                    {{ q.title }}
+                  </h3>
+                </div>
+
+                <div class="flex shrink-0 items-center gap-1">
+                  <RouterLink
+                    :to="{ name: 'study', query: { mode: 'single', id: q.id } }"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-subtle)] hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                    title="以闪卡背诵本题"
+                    aria-label="以闪卡背诵本题"
+                  >
+                    <Zap class="h-4 w-4" />
+                  </RouterLink>
+                  <button
+                    type="button"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[var(--bg-subtle)]"
+                    :class="q.progress.isStarred ? 'text-amber-500' : 'text-[var(--text-muted)] hover:text-amber-500'"
+                    :title="q.progress.isStarred ? '取消收藏' : '收藏'"
+                    :aria-label="q.progress.isStarred ? '取消收藏本题' : '收藏本题'"
+                    @click="onToggleStar(q)"
+                  >
+                    <Star class="h-4 w-4" :class="q.progress.isStarred ? 'fill-current' : ''" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- 答案正文区（支持自测折叠） -->
+              <div v-if="isAnswerShown(q.id)" class="mt-4">
+                <!-- 按需展开交互式原理推演（避免 18+ SVG 同时挂载阻塞页面） -->
+                <div v-if="q.animationKey" class="mb-5">
+                  <button
+                    type="button"
+                    class="flex w-full items-center justify-between rounded-lg border px-3.5 py-2.5 text-left text-xs font-medium transition-colors"
+                    :class="
+                      isAnimExpanded(q.id)
+                        ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
+                        : 'border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:border-[var(--border-strong)]'
+                    "
+                    :aria-expanded="isAnimExpanded(q.id)"
+                    @click="toggleAnim(q.id)"
+                  >
+                    <span class="inline-flex items-center gap-2">
+                      <Clapperboard class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" />
+                      <span>交互式原理推演</span>
+                    </span>
+                    <span class="font-mono text-[11px] text-[var(--text-muted)]">
+                      {{ isAnimExpanded(q.id) ? '收起动画 ▲' : '点击展开动画 ▼' }}
+                    </span>
+                  </button>
+
+                  <div v-if="isAnimExpanded(q.id)" class="mt-2.5">
+                    <QuestionAnimation :animation-key="q.animationKey" />
+                  </div>
+                </div>
+
+                <MarkdownView :source="q.answerMd" />
+
+                <div
+                  v-if="q.progress.personalNote"
+                  class="mt-5 flex items-start gap-2 rounded-lg border border-[#EFC9BF] bg-[#FBF0ED]/65 px-3.5 py-2.5 text-xs leading-relaxed text-[var(--text-primary)] dark:border-[#572C22] dark:bg-[#2E1B16]/60"
+                >
+                  <NotebookPen class="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#C84B31] dark:text-[#E06246]" />
+                  <span><strong>我的助记：</strong>{{ q.progress.personalNote }}</span>
+                </div>
+
+                <div v-if="hideAnswers" class="mt-4 text-right">
+                  <button
+                    type="button"
+                    class="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                    @click="toggleAnswer(q.id)"
+                  >
+                    收起答案
+                  </button>
+                </div>
+              </div>
+
+              <button
+                v-else
+                type="button"
+                class="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)]/70 py-5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:border-[#C84B31]/50 hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                @click="toggleAnswer(q.id)"
+              >
+                <Eye class="h-4 w-4" /> 点击展开参考答案自测
+              </button>
+            </article>
+          </div>
         </section>
       </div>
 
       <!-- 右侧吸顶大纲 TOC（宽屏） -->
       <aside class="card sticky top-32 hidden w-[264px] shrink-0 overflow-hidden xl:block">
-        <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">本篇目录</span>
-          <span class="text-[11px] tabular-nums text-slate-400">{{ filteredQuestions.length }} 题</span>
+        <div class="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3">
+          <span class="text-xs font-semibold text-[var(--text-primary)]">本篇目录</span>
+          <span class="font-mono text-[11px] tabular-nums text-[var(--text-muted)]">{{ filteredQuestions.length }} 题</span>
         </div>
-        <nav class="max-h-[calc(100vh-12rem)] space-y-3 overflow-y-auto p-3 text-xs">
+        <nav class="max-h-[calc(100vh-12rem)] space-y-3 overflow-y-auto p-3 text-xs" aria-label="章节大纲">
           <div v-for="ch in groupedChapters" :key="ch.id">
-            <p class="mb-1 truncate px-2 font-semibold text-slate-700 dark:text-slate-200">
+            <p class="mb-1 truncate px-2 font-semibold text-[var(--text-primary)]">
               {{ ch.title.replace(/^第[一二三四五六七八九十]+(?:篇|部分)[：:]\s*/, '') }}
             </p>
             <div class="space-y-0.5">
               <button
                 v-for="q in ch.items"
                 :key="q.id"
-                class="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left transition"
-                :class="activeId === q.id
-                  ? 'bg-brand-50 font-medium text-brand-700 dark:bg-brand-500/15 dark:text-brand-200'
-                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'"
+                type="button"
+                class="flex w-full items-center gap-1.5 rounded-md border px-2 py-1.5 text-left transition-colors"
+                :class="
+                  activeId === q.id
+                    ? 'border-[var(--border-default)] bg-[var(--bg-subtle)] font-medium text-[#C84B31] dark:text-[#E06246]'
+                    : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]/60 hover:text-[var(--text-primary)]'
+                "
                 @click="scrollToQuestion(q.id)"
               >
-                <span class="h-1.5 w-1.5 shrink-0 rounded-full" :class="q.priority === 'P0' ? 'bg-red-500' : q.priority === 'P1' ? 'bg-blue-500' : 'bg-slate-300'" />
-                <span class="shrink-0 font-mono text-[11px] opacity-70">{{ q.code }}</span>
+                <span
+                  class="h-1.5 w-1.5 shrink-0 rounded-full"
+                  :class="q.priority === 'P0' ? 'bg-[#C84B31] dark:bg-[#E06246]' : q.priority === 'P1' ? 'bg-amber-600 dark:bg-amber-400' : 'bg-[#B0AAA0]'"
+                />
+                <span class="shrink-0 font-mono text-[11px] opacity-75">{{ q.code }}</span>
                 <span class="truncate">{{ q.title }}</span>
               </button>
             </div>
@@ -324,26 +435,46 @@ async function onToggleStar(q: QuestionWithProgress) {
 
     <!-- 移动端 / 中屏目录抽屉 -->
     <Transition name="fade">
-      <div v-if="tocDrawerOpen" class="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm xl:hidden" @click.self="tocDrawerOpen = false">
-        <div class="flex h-full w-80 max-w-[85vw] flex-col bg-white shadow-2xl dark:bg-slate-900">
-          <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3.5 dark:border-slate-800">
-            <span class="text-sm font-semibold">本篇目录 ({{ filteredQuestions.length }} 题)</span>
-            <button class="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" @click="tocDrawerOpen = false">
+      <div
+        v-if="tocDrawerOpen"
+        role="dialog"
+        aria-modal="true"
+        aria-label="本篇章节目录"
+        class="fixed inset-0 z-50 flex justify-end bg-black/45 backdrop-blur-xs xl:hidden"
+        @click.self="tocDrawerOpen = false"
+      >
+        <div class="flex h-full w-80 max-w-[85vw] flex-col border-l border-[var(--border-default)] bg-[var(--bg-surface)]">
+          <div class="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3.5">
+            <span class="text-sm font-semibold text-[var(--text-primary)]">本篇目录 ({{ filteredQuestions.length }} 题)</span>
+            <button
+              type="button"
+              class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-subtle)]"
+              aria-label="关闭目录抽屉"
+              @click="tocDrawerOpen = false"
+            >
               <X class="h-5 w-5" />
             </button>
           </div>
           <nav class="flex-1 space-y-4 overflow-y-auto p-3 text-xs">
             <div v-for="ch in groupedChapters" :key="ch.id">
-              <p class="mb-1.5 px-2 font-semibold text-slate-700 dark:text-slate-200">{{ ch.title }}</p>
+              <p class="mb-1.5 px-2 font-semibold text-[var(--text-primary)]">{{ ch.title }}</p>
               <div class="space-y-0.5">
                 <button
                   v-for="q in ch.items"
                   :key="q.id"
-                  class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left"
-                  :class="activeId === q.id ? 'bg-brand-50 font-medium text-brand-700 dark:bg-brand-500/15 dark:text-brand-200' : 'text-slate-500 dark:text-slate-400'"
+                  type="button"
+                  class="flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left"
+                  :class="
+                    activeId === q.id
+                      ? 'border-[var(--border-default)] bg-[var(--bg-subtle)] font-medium text-[#C84B31] dark:text-[#E06246]'
+                      : 'border-transparent text-[var(--text-secondary)]'
+                  "
                   @click="scrollToQuestion(q.id)"
                 >
-                  <span class="h-1.5 w-1.5 shrink-0 rounded-full" :class="q.priority === 'P0' ? 'bg-red-500' : q.priority === 'P1' ? 'bg-blue-500' : 'bg-slate-300'" />
+                  <span
+                    class="h-1.5 w-1.5 shrink-0 rounded-full"
+                    :class="q.priority === 'P0' ? 'bg-[#C84B31]' : q.priority === 'P1' ? 'bg-amber-600' : 'bg-[#B0AAA0]'"
+                  />
                   <span class="shrink-0 font-mono text-[11px]">{{ q.code }}</span>
                   <span class="truncate">{{ q.title }}</span>
                 </button>

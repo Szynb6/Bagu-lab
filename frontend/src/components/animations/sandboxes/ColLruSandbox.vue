@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   ArrowRight,
@@ -10,7 +10,7 @@ import {
   Plus,
   RotateCcw,
   Search,
-  Sparkles,
+  Lightbulb,
 } from 'lucide-vue-next'
 
 type Mode = 'guided' | 'sandbox'
@@ -369,7 +369,7 @@ function nodeCardClass(n: LruNode) {
           <template v-for="(node, idx) in cur.list" :key="`dll-${node.key}`">
             <span class="shrink-0 font-mono text-xs font-bold text-slate-400">⇄</span>
             <div
-              class="relative flex min-w-[92px] flex-col items-center rounded-xl border px-3 py-2 transition-all duration-300"
+              class="relative flex min-w-[92px] flex-col items-center rounded-xl border px-3 py-2 transition-[fill,stroke,opacity] duration-300"
               :class="nodeCardClass(node)"
             >
               <span
@@ -412,7 +412,7 @@ function nodeCardClass(n: LruNode) {
         <p class="font-semibold text-slate-900 dark:text-white">{{ currentGuided.title }}</p>
         <p class="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">{{ currentGuided.speech }}</p>
         <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-          <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+          <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
           <span>{{ currentGuided.tip }}</span>
         </p>
       </div>
@@ -422,7 +422,7 @@ function nodeCardClass(n: LruNode) {
           <button
             v-for="(_, i) in guidedSteps"
             :key="i"
-            class="h-2 rounded-full transition-all"
+            class="h-2 rounded-full transition-[width,background-color] duration-200"
             :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
             :title="`第 ${i + 1} 步`"
             @click="stopPlay(); stepIdx = i"

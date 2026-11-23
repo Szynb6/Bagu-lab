@@ -10,7 +10,9 @@ const { toast } = storeToRefs(useUiStore())
     <div
       v-if="toast"
       :key="toast.id"
-      class="fixed bottom-24 left-1/2 z-[80] -translate-x-1/2 rounded-full bg-slate-900/90 px-4 py-2 text-sm text-white shadow-lg backdrop-blur lg:bottom-8 dark:bg-white/90 dark:text-slate-900"
+      role="status"
+      aria-live="polite"
+      class="fixed bottom-24 left-1/2 z-[80] -translate-x-1/2 rounded-lg border border-[#3B3933] bg-[#161614] px-4 py-2 text-sm font-medium text-[#ECEAE4] shadow-md lg:bottom-8 dark:border-[#D4D0C5] dark:bg-[#ECEAE4] dark:text-[#161614]"
     >
       {{ toast.text }}
     </div>

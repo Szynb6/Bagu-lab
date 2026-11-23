@@ -39,8 +39,8 @@ md.renderer.rules.table_close = () => '</table></div>'
 md.renderer.rules.image = (tokens, idx) => {
   const t = tokens[idx]
   const src = t.attrGet('src') ?? ''
-  const alt = escapeHtml(t.content || '')
-  return `<img src="${src}" alt="${alt}" loading="lazy" data-zoom />`
+  const alt = escapeHtml(t.content || '原理图解')
+  return `<img src="${src}" alt="${alt}" loading="lazy" decoding="async" tabindex="0" role="button" data-zoom />`
 }
 
 const cache = new Map<string, string>()

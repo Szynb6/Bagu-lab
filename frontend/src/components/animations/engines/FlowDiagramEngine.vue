@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Sparkles } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Lightbulb, Pause, Play, RotateCcw } from 'lucide-vue-next'
 import type { FlowEdge, FlowNode, FlowSpec, Tone } from '../types'
 
 const props = defineProps<{ spec: FlowSpec }>()
@@ -51,34 +51,34 @@ onBeforeUnmount(stopPlay)
 
 function zoneClass(tone: Tone = 'slate') {
   const map: Record<Tone, string> = {
-    slate: 'fill-slate-50/80 stroke-slate-200 dark:fill-slate-900/60 dark:stroke-slate-700',
-    brand: 'fill-brand-50/50 stroke-brand-200 dark:fill-brand-500/10 dark:stroke-brand-500/30',
-    emerald: 'fill-emerald-50/50 stroke-emerald-200 dark:fill-emerald-500/10 dark:stroke-emerald-500/30',
-    amber: 'fill-amber-50/50 stroke-amber-200 dark:fill-amber-500/10 dark:stroke-amber-500/30',
-    red: 'fill-red-50/50 stroke-red-200 dark:fill-red-500/10 dark:stroke-red-500/30',
-    indigo: 'fill-indigo-50/50 stroke-indigo-200 dark:fill-indigo-500/10 dark:stroke-indigo-500/30',
-    purple: 'fill-purple-50/50 stroke-purple-200 dark:fill-purple-500/10 dark:stroke-purple-500/30',
-    cyan: 'fill-cyan-50/50 stroke-cyan-200 dark:fill-cyan-500/10 dark:stroke-cyan-500/30',
+    slate: 'fill-[#F4F2EC]/80 stroke-[#D4D0C5] dark:fill-[#22211E]/70 dark:stroke-[#3B3933]',
+    brand: 'fill-brand-50/60 stroke-brand-200 dark:fill-brand-950/40 dark:stroke-brand-800',
+    emerald: 'fill-emerald-50/50 stroke-emerald-200 dark:fill-emerald-950/35 dark:stroke-emerald-800',
+    amber: 'fill-amber-50/50 stroke-amber-200 dark:fill-amber-950/35 dark:stroke-amber-800',
+    red: 'fill-red-50/50 stroke-red-200 dark:fill-red-950/35 dark:stroke-red-800',
+    indigo: 'fill-slate-100/70 stroke-slate-300 dark:fill-slate-800/40 dark:stroke-slate-700',
+    purple: 'fill-stone-100/70 stroke-stone-300 dark:fill-stone-800/40 dark:stroke-stone-700',
+    cyan: 'fill-teal-50/50 stroke-teal-200 dark:fill-teal-950/35 dark:stroke-teal-800',
   }
   return map[tone]
 }
 
 function nodeBoxClass(n: FlowNode) {
   const s = step.value
-  if (s.dangerNodes?.includes(n.id)) return 'fill-red-500 stroke-red-600 dark:fill-red-500 dark:stroke-red-400'
-  if (s.warnNodes?.includes(n.id)) return 'fill-amber-500 stroke-amber-600 dark:fill-amber-500 dark:stroke-amber-400'
+  if (s.dangerNodes?.includes(n.id)) return 'fill-red-700 stroke-red-800 dark:fill-red-700 dark:stroke-red-500'
+  if (s.warnNodes?.includes(n.id)) return 'fill-amber-700 stroke-amber-800 dark:fill-amber-700 dark:stroke-amber-500'
   if (s.activeNodes?.includes(n.id)) return 'fill-brand-600 stroke-brand-700 dark:fill-brand-500 dark:stroke-brand-300'
-  if (s.doneNodes?.includes(n.id)) return 'fill-emerald-500 stroke-emerald-600 dark:fill-emerald-500 dark:stroke-emerald-400'
-  if (s.mutedNodes?.includes(n.id)) return 'fill-slate-100/70 stroke-slate-200 opacity-45 dark:fill-slate-900/50 dark:stroke-slate-800'
+  if (s.doneNodes?.includes(n.id)) return 'fill-emerald-700 stroke-emerald-800 dark:fill-emerald-700 dark:stroke-emerald-500'
+  if (s.mutedNodes?.includes(n.id)) return 'fill-[#F4F2EC]/70 stroke-[#E5E2DA] opacity-45 dark:fill-[#1A1917]/60 dark:stroke-[#2B2A26]'
   const base: Record<Tone, string> = {
-    slate: 'fill-white stroke-slate-300 dark:fill-slate-800/90 dark:stroke-slate-600',
-    brand: 'fill-brand-50/70 stroke-brand-300 dark:fill-brand-500/15 dark:stroke-brand-500/40',
-    emerald: 'fill-emerald-50/70 stroke-emerald-300 dark:fill-emerald-500/15 dark:stroke-emerald-500/40',
-    amber: 'fill-amber-50/70 stroke-amber-300 dark:fill-amber-500/15 dark:stroke-amber-500/40',
-    red: 'fill-red-50/70 stroke-red-300 dark:fill-red-500/15 dark:stroke-red-500/40',
-    indigo: 'fill-indigo-50/70 stroke-indigo-300 dark:fill-indigo-500/15 dark:stroke-indigo-500/40',
-    purple: 'fill-purple-50/70 stroke-purple-300 dark:fill-purple-500/15 dark:stroke-purple-500/40',
-    cyan: 'fill-cyan-50/70 stroke-cyan-300 dark:fill-cyan-500/15 dark:stroke-cyan-500/40',
+    slate: 'fill-white stroke-[#D4D0C5] dark:fill-[#22211E] dark:stroke-[#3B3933]',
+    brand: 'fill-brand-50/80 stroke-brand-300 dark:fill-brand-950/50 dark:stroke-brand-700',
+    emerald: 'fill-emerald-50/80 stroke-emerald-300 dark:fill-emerald-950/40 dark:stroke-emerald-700',
+    amber: 'fill-amber-50/80 stroke-amber-300 dark:fill-amber-950/40 dark:stroke-amber-700',
+    red: 'fill-red-50/80 stroke-red-300 dark:fill-red-950/40 dark:stroke-red-700',
+    indigo: 'fill-slate-100 stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600',
+    purple: 'fill-stone-100 stroke-stone-300 dark:fill-stone-800 dark:stroke-stone-600',
+    cyan: 'fill-teal-50/80 stroke-teal-300 dark:fill-teal-950/40 dark:stroke-teal-700',
   }
   return base[n.tone ?? 'slate']
 }
@@ -152,14 +152,14 @@ function edgeGeom(e: FlowEdge) {
 
 function metricTone(tone: Tone = 'slate') {
   const map: Record<Tone, string> = {
-    slate: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
-    brand: 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300',
-    emerald: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-    amber: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-    red: 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300',
-    indigo: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300',
-    purple: 'bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300',
-    cyan: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300',
+    slate: 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-primary)]',
+    brand: 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]',
+    emerald: 'border-[#B8DCD1] bg-[#EBF4F1] text-[#235749] dark:border-[#244E41] dark:bg-[#162923] dark:text-[#86CBB7]',
+    amber: 'border-amber-300/80 bg-amber-50 text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/40 dark:text-amber-200',
+    red: 'border-red-300/80 bg-red-50 text-red-800 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-200',
+    indigo: 'border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200',
+    purple: 'border-stone-300 bg-stone-100 text-stone-800 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200',
+    cyan: 'border-teal-300/80 bg-teal-50 text-teal-900 dark:border-teal-800/50 dark:bg-teal-950/40 dark:text-teal-200',
   }
   return map[tone]
 }
@@ -172,26 +172,27 @@ const uid = `fl-${Math.random().toString(36).slice(2, 8)}`
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div
         v-if="spec.scenarios.length > 1"
-        class="inline-flex flex-wrap rounded-xl border border-slate-200 bg-slate-100/80 p-0.5 text-xs dark:border-slate-700 dark:bg-slate-800"
+        class="inline-flex flex-wrap rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-0.5 text-xs"
       >
         <button
           v-for="(sc, i) in spec.scenarios"
           :key="sc.id"
-          class="rounded-lg px-2.5 py-1 font-medium transition"
-          :class="i === scenarioIdx ? 'bg-white text-brand-700 shadow-xs dark:bg-slate-900 dark:text-brand-300' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+          type="button"
+          class="rounded-md px-2.5 py-1 font-medium transition-colors"
+          :class="i === scenarioIdx ? 'bg-[var(--bg-surface)] text-[#C84B31] dark:text-[#E06246]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
           @click="selectScenario(i)"
         >
           {{ sc.label }}
         </button>
       </div>
-      <span v-else class="text-xs font-medium text-slate-400">分步原理演练</span>
+      <span v-else class="text-xs font-medium text-[var(--text-muted)]">分步原理演练</span>
 
-      <span class="rounded-full bg-brand-100/80 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+      <span class="rounded border border-[#EFC9BF] bg-[#FBF0ED] px-2 py-0.5 font-mono text-[11px] font-semibold tabular-nums text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]">
         {{ step.badge }} · {{ stepIdx + 1 }}/{{ scenario.steps.length }}
       </span>
     </div>
 
-    <div class="overflow-x-auto rounded-xl border border-slate-200/80 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-950/70">
+    <div class="overflow-x-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-2.5">
       <svg :viewBox="spec.viewBox ?? '0 0 760 280'" class="mx-auto w-full min-w-[560px] max-w-[760px] select-none">
         <defs>
           <marker :id="`${uid}-arr`" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -205,12 +206,12 @@ const uid = `fl-${Math.random().toString(36).slice(2, 8)}`
             :y="z.y"
             :width="z.w"
             :height="z.h"
-            rx="14"
-            stroke-width="1.3"
+            rx="12"
+            stroke-width="1.2"
             stroke-dasharray="5 3"
             :class="zoneClass(z.tone)"
           />
-          <text :x="z.x + 12" :y="z.y + 18" class="fill-slate-500 text-[10.5px] font-semibold dark:fill-slate-400">
+          <text :x="z.x + 12" :y="z.y + 18" class="fill-[#5E5A52] text-[10.5px] font-semibold dark:fill-[#A8A397]">
             {{ z.label }}
           </text>
         </g>
@@ -219,12 +220,14 @@ const uid = `fl-${Math.random().toString(36).slice(2, 8)}`
           <path
             :d="edgeGeom(e).d"
             fill="none"
-            :stroke-width="step.activeEdges?.includes(e.id) ? 2.6 : 1.7"
+            :stroke-width="step.activeEdges?.includes(e.id) ? 2.5 : 1.6"
             :marker-end="`url(#${uid}-arr)`"
-            class="transition-all duration-300"
-            :class="step.activeEdges?.includes(e.id)
-              ? 'text-brand-500 stroke-brand-500 [stroke-dasharray:6_4]'
-              : 'text-slate-300 stroke-slate-300 dark:text-slate-700 dark:stroke-slate-700'"
+            class="transition-[stroke,opacity] duration-300"
+            :class="
+              step.activeEdges?.includes(e.id)
+                ? 'text-brand-500 stroke-brand-500 [stroke-dasharray:6_4]'
+                : 'text-[#C8C3B8] stroke-[#C8C3B8] dark:text-[#3B3933] dark:stroke-[#3B3933]'
+            "
           />
           <text
             v-if="e.label"
@@ -232,7 +235,7 @@ const uid = `fl-${Math.random().toString(36).slice(2, 8)}`
             :y="edgeGeom(e).ly"
             text-anchor="middle"
             class="text-[10px] font-medium transition-colors"
-            :class="step.activeEdges?.includes(e.id) ? 'fill-brand-600 font-semibold dark:fill-brand-300' : 'fill-slate-400 dark:fill-slate-500'"
+            :class="step.activeEdges?.includes(e.id) ? 'fill-[#96311D] font-semibold dark:fill-[#EFC0B3]' : 'fill-[#736E64] dark:fill-[#8F8A7E]'"
           >
             {{ e.label }}
           </text>
@@ -242,9 +245,9 @@ const uid = `fl-${Math.random().toString(36).slice(2, 8)}`
           <rect
             :width="n.w"
             :height="n.h"
-            rx="11"
-            stroke-width="1.7"
-            class="transition-all duration-300"
+            rx="10"
+            stroke-width="1.6"
+            class="transition-[fill,stroke,opacity] duration-300"
             :class="nodeBoxClass(n)"
           />
           <text
@@ -252,7 +255,7 @@ const uid = `fl-${Math.random().toString(36).slice(2, 8)}`
             :y="(step.nodeText?.[n.id]?.sub ?? n.sub) ? n.h / 2 - 4 : n.h / 2 + 4"
             text-anchor="middle"
             class="text-[11.5px] font-semibold transition-colors"
-            :class="isSolidNode(n.id) ? 'fill-white' : 'fill-slate-800 dark:fill-slate-100'"
+            :class="isSolidNode(n.id) ? 'fill-white' : 'fill-[#161614] dark:fill-[#ECEAE4]'"
           >
             {{ step.nodeText?.[n.id]?.label ?? n.label }}
           </text>
@@ -262,7 +265,7 @@ const uid = `fl-${Math.random().toString(36).slice(2, 8)}`
             :y="n.h / 2 + 12"
             text-anchor="middle"
             class="text-[9.5px] transition-colors"
-            :class="isSolidNode(n.id) ? 'fill-white/85' : 'fill-slate-400 dark:fill-slate-400'"
+            :class="isSolidNode(n.id) ? 'fill-white/90' : 'fill-[#5E5A52] dark:fill-[#A8A397]'"
           >
             {{ step.nodeText?.[n.id]?.sub ?? n.sub }}
           </text>
@@ -274,19 +277,19 @@ const uid = `fl-${Math.random().toString(36).slice(2, 8)}`
       <div
         v-for="m in step.metrics"
         :key="m.label"
-        class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium"
+        class="inline-flex items-center gap-1.5 rounded border px-2.5 py-1 text-xs font-medium"
         :class="metricTone(m.tone)"
       >
-        <span class="opacity-75">{{ m.label }}:</span>
-        <span class="font-mono font-semibold">{{ m.value }}</span>
+        <span class="opacity-80">{{ m.label }}:</span>
+        <span class="font-mono font-semibold tabular-nums">{{ m.value }}</span>
       </div>
     </div>
 
-    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 text-sm dark:border-slate-800 dark:bg-slate-900/80">
-      <p class="font-semibold text-slate-900 dark:text-white">{{ step.title }}</p>
-      <p class="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">{{ step.speech }}</p>
-      <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-        <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+    <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-3.5 text-sm">
+      <p class="font-semibold text-[var(--text-primary)]">{{ step.title }}</p>
+      <p class="mt-1 leading-relaxed text-[var(--text-secondary)]">{{ step.speech }}</p>
+      <p class="mt-2.5 flex items-start gap-1.5 rounded-md border border-amber-300/70 bg-amber-50/70 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-700/40 dark:bg-amber-950/35 dark:text-amber-200">
+        <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
         <span>{{ step.tip }}</span>
       </p>
     </div>
@@ -296,25 +299,27 @@ const uid = `fl-${Math.random().toString(36).slice(2, 8)}`
         <button
           v-for="(_, i) in scenario.steps"
           :key="i"
-          class="h-2 rounded-full transition-all"
-          :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
+          type="button"
+          class="h-2 rounded-full transition-[width,background-color] duration-200"
+          :class="i === stepIdx ? 'w-6 bg-[#C84B31] dark:bg-[#E06246]' : 'w-2 bg-[var(--border-strong)] hover:bg-[var(--text-muted)]'"
           :title="`第 ${i + 1} 步`"
+          :aria-label="`跳转到第 ${i + 1} 步`"
           @click="stopPlay(); stepIdx = i"
         />
       </div>
 
       <div class="flex items-center gap-2">
-        <button class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx === 0" @click="stopPlay(); stepIdx--">
+        <button type="button" class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx === 0" @click="stopPlay(); stepIdx--">
           <ChevronLeft class="h-3.5 w-3.5" /> 上一步
         </button>
-        <button class="btn-primary h-8 px-3 text-xs" @click="togglePlay">
+        <button type="button" class="btn-primary h-8 px-3 text-xs" @click="togglePlay">
           <component :is="playing ? Pause : Play" class="h-3.5 w-3.5" />
           {{ playing ? '暂停' : '自动播放' }}
         </button>
-        <button class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx >= scenario.steps.length - 1" @click="stopPlay(); stepIdx++">
+        <button type="button" class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx >= scenario.steps.length - 1" @click="stopPlay(); stepIdx++">
           下一步 <ChevronRight class="h-3.5 w-3.5" />
         </button>
-        <button class="btn-ghost h-8 px-2 text-xs" title="重置" @click="stopPlay(); stepIdx = 0">
+        <button type="button" class="btn-ghost h-8 px-2 text-xs" title="重置" aria-label="重置动画到第一步" @click="stopPlay(); stepIdx = 0">
           <RotateCcw class="h-3.5 w-3.5" />
         </button>
       </div>

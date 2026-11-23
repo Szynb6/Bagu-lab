@@ -1,6 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from 'vue'
-import { CheckCircle2, Lock, RotateCcw, ShieldAlert, Sparkles, Unlock } from 'lucide-vue-next'
+import { CheckCircle2, Lock, RotateCcw, ShieldAlert, Lightbulb, Unlock } from 'lucide-vue-next'
 
 type ScenarioId = 'unique-hit' | 'unique-miss' | 'nonunique-hit' | 'range'
 type GapId = '(-inf,5)' | '(5,10)' | '(10,15)' | '(15,20)' | '(20,+inf)'
@@ -233,11 +233,11 @@ function isRecordConflict(val: number) {
             height="48"
             rx="8"
             stroke-width="1.6"
-            class="transition-all duration-300"
+            class="transition-[fill,stroke,opacity] duration-300"
             :class="isGapConflict(gap.id)
               ? 'fill-red-500/20 stroke-red-500 [stroke-dasharray:5_3]'
               : isGapLocked(gap.id)
-                ? 'fill-amber-400/20 stroke-amber-500 [stroke-dasharray:5_3] dark:fill-amber-500/15'
+                ? 'fill-amber-400/20 stroke-amber-500 [stroke-dasharray:5_3] dark:fill-amber-700/15'
                 : 'fill-slate-100/50 stroke-transparent dark:fill-slate-900/40'"
           />
           <text
@@ -281,11 +281,11 @@ function isRecordConflict(val: number) {
             cy="126"
             r="20"
             stroke-width="2.2"
-            class="transition-all duration-300"
+            class="transition-[fill,stroke,opacity] duration-300"
             :class="isRecordConflict(rec.val)
               ? 'fill-red-500 stroke-red-700'
               : isRecordLocked(rec.val)
-                ? 'fill-amber-500 stroke-amber-600'
+                ? 'fill-amber-700 stroke-amber-600'
                 : 'fill-white stroke-slate-400 dark:fill-slate-800 dark:stroke-slate-500'"
           />
           <text
@@ -325,7 +325,7 @@ function isRecordConflict(val: number) {
             width="112"
             height="28"
             rx="14"
-            :class="probeResult.blocked ? 'fill-red-500' : 'fill-emerald-500'"
+            :class="probeResult.blocked ? 'fill-red-500' : 'fill-emerald-700'"
           />
           <text :x="activeProbe.x" y="30" text-anchor="middle" class="font-mono text-[11px] font-bold fill-white">
             {{ probeResult.blocked ? `✗ 阻塞 (${activeProbe.key})` : `✓ 放行 (${activeProbe.key})` }}
@@ -334,14 +334,14 @@ function isRecordConflict(val: number) {
             :cx="activeProbe.x"
             cy="126"
             r="7"
-            :class="probeResult.blocked ? 'fill-red-500 stroke-white' : 'fill-emerald-500 stroke-white'"
+            :class="probeResult.blocked ? 'fill-red-500 stroke-white' : 'fill-emerald-700 stroke-white'"
             stroke-width="2"
           />
         </g>
 
         <!-- 图例 -->
         <g transform="translate(20, 12)">
-          <rect x="0" y="0" width="12" height="12" rx="3" class="fill-amber-500" />
+          <rect x="0" y="0" width="12" height="12" rx="3" class="fill-amber-700" />
           <text x="17" y="10" class="fill-slate-500 text-[10px] dark:fill-slate-400">行锁 Record Lock</text>
           <rect x="115" y="0" width="14" height="12" rx="3" class="fill-amber-400/25 stroke-amber-500 [stroke-dasharray:3_2]" />
           <text x="134" y="10" class="fill-slate-500 text-[10px] dark:fill-slate-400">间隙锁 Gap / Next-Key</text>
@@ -404,7 +404,7 @@ function isRecordConflict(val: number) {
       </div>
       <p class="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">{{ scenario.mechanism }}</p>
       <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-        <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+        <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
         <span>{{ scenario.tip }}</span>
       </p>
     </div>

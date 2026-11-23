@@ -34,24 +34,24 @@ watch(
 <template>
   <div
     v-if="entry"
-    class="overflow-hidden rounded-2xl border border-brand-200/80 bg-gradient-to-b from-brand-50/40 to-white dark:border-brand-500/25 dark:from-brand-500/10 dark:to-slate-900"
+    class="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-subtle)]/55"
   >
-    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-brand-100 px-4 py-3 sm:px-5 dark:border-brand-500/20">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default)] bg-[var(--bg-subtle)] px-4 py-3 sm:px-5">
       <div>
         <div class="flex items-center gap-2">
-          <span class="inline-flex items-center rounded-md bg-brand-600 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
-            交互动画
+          <span class="inline-flex items-center rounded border border-[#EFC9BF] bg-[#FBF0ED] px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-tight text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]">
+            交互推演
           </span>
-          <h4 class="text-sm font-semibold text-slate-900 dark:text-white">{{ entry.title }}</h4>
+          <h4 class="text-sm font-semibold text-[var(--text-primary)]">{{ entry.title }}</h4>
         </div>
-        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ entry.subtitle }}</p>
+        <p class="mt-0.5 text-xs text-[var(--text-secondary)]">{{ entry.subtitle }}</p>
       </div>
     </div>
 
     <div class="p-4 sm:p-5">
       <component :is="entry.component" v-if="entry.component" />
-      <div v-else-if="loading" class="flex items-center justify-center gap-2 py-12 text-xs text-slate-400">
-        <Loader2 class="h-4 w-4 animate-spin" /> 加载交互动画中...
+      <div v-else-if="loading" class="flex items-center justify-center gap-2 py-12 text-xs text-[var(--text-muted)]">
+        <Loader2 class="h-4 w-4 animate-spin text-[#C84B31] dark:text-[#E06246]" /> 加载交互原理推演中...
       </div>
       <template v-else-if="spec">
         <FlowDiagramEngine v-if="spec.kind === 'flow'" :spec="spec" />

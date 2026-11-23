@@ -1,6 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
-import { ChevronLeft, ChevronRight, Layers, Pause, Play, RotateCcw, Sparkles } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Layers, Pause, Play, RotateCcw, Lightbulb } from 'lucide-vue-next'
 
 interface SkipNode {
   col: number
@@ -232,13 +232,13 @@ function nodeKey(col: number, lvl: number) {
 function cellRectClass(col: number, lvl: number) {
   const s = currentStep.value
   const isCurrent = s.curCol === col && s.curLevel === lvl
-  if (isCurrent && s.found) return 'fill-emerald-500 stroke-emerald-600'
+  if (isCurrent && s.found) return 'fill-emerald-700 stroke-emerald-600'
   if (isCurrent) return 'fill-brand-600 stroke-brand-700 dark:fill-brand-500 dark:stroke-blue-300'
   if (s.visitedNodes.includes(nodeKey(col, lvl))) {
-    return 'fill-emerald-50 stroke-emerald-400 dark:fill-emerald-500/20 dark:stroke-emerald-400'
+    return 'fill-emerald-50 stroke-emerald-400 dark:fill-emerald-700/20 dark:stroke-emerald-400'
   }
   if (nodes[col]!.score === targetScore.value) {
-    return 'fill-amber-50 stroke-amber-400 dark:fill-amber-500/15 dark:stroke-amber-400'
+    return 'fill-amber-50 stroke-amber-400 dark:fill-amber-700/15 dark:stroke-amber-400'
   }
   return 'fill-white stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600'
 }
@@ -340,7 +340,7 @@ onBeforeUnmount(stopPlay)
             :y2="levelY(edge.level)"
             :stroke-width="currentStep.activeEdgeId === edge.id || currentStep.visitedEdgeIds.includes(edge.id) ? 2.4 : 1.6"
             marker-end="url(#sl-arrow)"
-            class="transition-all duration-300"
+            class="transition-[fill,stroke,opacity] duration-300"
             :class="edgeLineClass(edge)"
           />
           <!-- 仅在跨节点跳跃 (span > 1) 或当前激活边上展示 span 标签避免拥挤 -->
@@ -391,7 +391,7 @@ onBeforeUnmount(stopPlay)
               height="26"
               rx="7"
               stroke-width="1.6"
-              class="transition-all duration-300"
+              class="transition-[fill,stroke,opacity] duration-300"
               :class="cellRectClass(node.col, lvl)"
             />
             <text
@@ -443,7 +443,7 @@ onBeforeUnmount(stopPlay)
       </div>
       <p class="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">{{ currentStep.speech }}</p>
       <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-        <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+        <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
         <span>{{ currentStep.tip }}</span>
       </p>
     </div>
@@ -454,7 +454,7 @@ onBeforeUnmount(stopPlay)
         <button
           v-for="(_, i) in steps"
           :key="i"
-          class="h-2 rounded-full transition-all"
+          class="h-2 rounded-full transition-[width,background-color] duration-200"
           :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
           :title="`第 ${i + 1} 步`"
           @click="stopPlay(); stepIdx = i"

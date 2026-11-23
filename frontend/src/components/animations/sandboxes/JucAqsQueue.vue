@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   CheckCircle2,
@@ -10,7 +10,7 @@ import {
   Plus,
   RefreshCw,
   RotateCcw,
-  Sparkles,
+  Lightbulb,
   Unlock,
 } from 'lucide-vue-next'
 
@@ -361,11 +361,18 @@ function resetSandbox() {
             </p>
           </div>
           <span
-            class="flex h-10 min-w-10 items-center justify-center rounded-xl px-2 font-mono text-sm font-bold"
-            :class="cur.owner ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'"
+            v-if="cur.owner"
+            class="flex h-10 min-w-10 items-center justify-center rounded-xl bg-emerald-700 px-2 font-mono text-sm font-bold text-white"
           >
-            <component :is="cur.owner ? Lock : Unlock" class="mr-1 h-3.5 w-3.5" />
-            {{ cur.owner ?? 'null' }}
+            <Lock class="mr-1 h-3.5 w-3.5" />
+            {{ cur.owner }}
+          </span>
+          <span
+            v-else
+            class="flex h-10 min-w-10 items-center justify-center rounded-xl bg-stone-200 px-2 font-mono text-sm font-bold text-stone-700 dark:bg-stone-800 dark:text-stone-300"
+          >
+            <Unlock class="mr-1 h-3.5 w-3.5" />
+            null
           </span>
         </div>
 
@@ -434,13 +441,13 @@ function resetSandbox() {
                 height="68"
                 rx="11"
                 stroke-width="1.8"
-                class="transition-all duration-300"
+                class="transition-[fill,stroke,opacity] duration-300"
                 :class="node.thread === null
                   ? node.highlight === 'waking'
-                    ? 'fill-emerald-50 stroke-emerald-500 dark:fill-emerald-500/20 dark:stroke-emerald-400'
+                    ? 'fill-emerald-50 stroke-emerald-500 dark:fill-emerald-700/20 dark:stroke-emerald-400'
                     : 'fill-slate-100 stroke-slate-400 dark:fill-slate-800 dark:stroke-slate-500'
                   : node.highlight === 'new'
-                    ? 'fill-amber-50 stroke-amber-500 dark:fill-amber-500/20 dark:stroke-amber-400'
+                    ? 'fill-amber-50 stroke-amber-500 dark:fill-amber-700/20 dark:stroke-amber-400'
                     : 'fill-white stroke-brand-400 dark:fill-slate-800 dark:stroke-brand-500'"
               />
               <text
@@ -461,7 +468,7 @@ function resetSandbox() {
                 width="80"
                 height="15"
                 rx="5"
-                :class="node.parked ? 'fill-amber-500/90' : 'fill-emerald-500/90'"
+                :class="node.parked ? 'fill-amber-700/90' : 'fill-emerald-700/90'"
               />
               <text x="58" y="58" text-anchor="middle" class="fill-white font-mono text-[9px] font-semibold">
                 {{ node.parked ? 'PARKED 阻塞' : node.highlight === 'waking' ? '唤醒晋升 Head' : 'thread=null' }}
@@ -504,7 +511,7 @@ function resetSandbox() {
         <p class="font-semibold text-slate-900 dark:text-white">{{ currentGuided.title }}</p>
         <p class="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">{{ currentGuided.speech }}</p>
         <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-          <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+          <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
           <span>{{ currentGuided.tip }}</span>
         </p>
       </div>
@@ -514,7 +521,7 @@ function resetSandbox() {
           <button
             v-for="(_, i) in guidedSteps"
             :key="i"
-            class="h-2 rounded-full transition-all"
+            class="h-2 rounded-full transition-[width,background-color] duration-200"
             :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
             :title="`第 ${i + 1} 步`"
             @click="stopPlay(); stepIdx = i"

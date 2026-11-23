@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   ChevronLeft,
@@ -7,7 +7,7 @@ import {
   Play,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
+  Lightbulb,
   TriangleAlert,
 } from 'lucide-vue-next'
 
@@ -460,7 +460,7 @@ function colorLabel(c: NodeColor) {
           fill="none"
           stroke-width="2.2"
           marker-end="url(#tri-arrow)"
-          class="text-brand-500 stroke-brand-500 transition-all duration-300"
+          class="text-brand-500 stroke-brand-500 transition-[fill,stroke,opacity] duration-300"
         />
 
         <!-- 边：A -> B -->
@@ -469,7 +469,7 @@ function colorLabel(c: NodeColor) {
           fill="none"
           stroke-width="2.2"
           marker-end="url(#tri-arrow)"
-          class="text-slate-400 stroke-slate-400 transition-all duration-300 dark:text-slate-500 dark:stroke-slate-500"
+          class="text-slate-400 stroke-slate-400 transition-[fill,stroke,opacity] duration-300 dark:text-slate-500 dark:stroke-slate-500"
         />
         <text x="338" y="116" text-anchor="middle" class="fill-slate-400 font-mono text-[10px]">A.b</text>
 
@@ -479,7 +479,7 @@ function colorLabel(c: NodeColor) {
           fill="none"
           stroke-width="2.2"
           :marker-end="curStep.edgeBC === 'intact' ? 'url(#tri-arrow)' : undefined"
-          class="transition-all duration-300"
+          class="transition-[fill,stroke,opacity] duration-300"
           :class="curStep.edgeBC === 'intact'
             ? 'text-slate-400 stroke-slate-400 dark:text-slate-500 dark:stroke-slate-500'
             : curStep.edgeBC === 'satb-saved'
@@ -502,7 +502,7 @@ function colorLabel(c: NodeColor) {
         </g>
         <!-- SATB 写前屏障提示 -->
         <g v-if="curStep.edgeBC === 'satb-saved'" transform="translate(454, 146)">
-          <rect width="128" height="22" rx="6" class="fill-emerald-500/15 stroke-emerald-500" stroke-width="1" />
+          <rect width="128" height="22" rx="6" class="fill-emerald-700/15 stroke-emerald-500" stroke-width="1" />
           <text x="64" y="14" text-anchor="middle" class="fill-emerald-700 text-[10px] font-semibold dark:fill-emerald-300">写前屏障: 旧值 C 标灰</text>
         </g>
 
@@ -513,7 +513,7 @@ function colorLabel(c: NodeColor) {
             fill="none"
             stroke-width="2.4"
             marker-end="url(#tri-arrow)"
-            class="transition-all duration-300 [stroke-dasharray:6_4]"
+            class="transition-[fill,stroke,opacity] duration-300 [stroke-dasharray:6_4]"
             :class="curStep.edgeAC === 'barrier-regray' ? 'text-brand-600 stroke-brand-600' : 'text-amber-500 stroke-amber-500'"
           />
           <rect
@@ -522,7 +522,7 @@ function colorLabel(c: NodeColor) {
             width="142"
             height="22"
             rx="6"
-            :class="curStep.edgeAC === 'barrier-regray' ? 'fill-brand-50 stroke-brand-400 dark:fill-brand-500/20 dark:stroke-brand-400' : 'fill-amber-50 stroke-amber-400 dark:fill-amber-500/20 dark:stroke-amber-400'"
+            :class="curStep.edgeAC === 'barrier-regray' ? 'fill-brand-50 stroke-brand-400 dark:fill-brand-500/20 dark:stroke-brand-400' : 'fill-amber-50 stroke-amber-400 dark:fill-amber-700/20 dark:stroke-amber-400'"
             stroke-width="1"
           />
           <text
@@ -548,7 +548,7 @@ function colorLabel(c: NodeColor) {
           <circle
             r="32"
             stroke-width="2.5"
-            class="transition-all duration-300"
+            class="transition-[fill,stroke,opacity] duration-300"
             :class="circleClass('A')"
           />
           <circle v-if="curStep.activeNode === 'A'" r="38" fill="none" class="stroke-brand-500/60" stroke-width="2" stroke-dasharray="4 3" />
@@ -558,7 +558,7 @@ function colorLabel(c: NodeColor) {
 
         <!-- 节点：B -->
         <g transform="translate(425, 124)">
-          <circle r="32" stroke-width="2.5" class="transition-all duration-300" :class="circleClass('B')" />
+          <circle r="32" stroke-width="2.5" class="transition-[fill,stroke,opacity] duration-300" :class="circleClass('B')" />
           <circle v-if="curStep.activeNode === 'B'" r="38" fill="none" class="stroke-brand-500/60" stroke-width="2" stroke-dasharray="4 3" />
           <text y="-2" text-anchor="middle" class="text-[15px] font-bold" :class="nodeTextClass('B')">B</text>
           <text y="14" text-anchor="middle" class="text-[9px]" :class="nodeTextClass('B')">{{ colorLabel(curStep.colors.B) }}</text>
@@ -566,7 +566,7 @@ function colorLabel(c: NodeColor) {
 
         <!-- 节点：C -->
         <g transform="translate(600, 124)">
-          <circle r="32" stroke-width="2.5" class="transition-all duration-300" :class="circleClass('C')" />
+          <circle r="32" stroke-width="2.5" class="transition-[fill,stroke,opacity] duration-300" :class="circleClass('C')" />
           <circle v-if="curStep.activeNode === 'C'" r="38" fill="none" class="stroke-brand-500/60" stroke-width="2" stroke-dasharray="4 3" />
           <text y="-2" text-anchor="middle" class="text-[15px] font-bold" :class="nodeTextClass('C')">C</text>
           <text y="14" text-anchor="middle" class="text-[9px]" :class="nodeTextClass('C')">{{ colorLabel(curStep.colors.C) }}</text>
@@ -582,7 +582,7 @@ function colorLabel(c: NodeColor) {
 
         <!-- 节点：D (孤岛垃圾) -->
         <g transform="translate(120, 224)">
-          <circle r="24" stroke-width="2" class="transition-all duration-300" :class="circleClass('D')" />
+          <circle r="24" stroke-width="2" class="transition-[fill,stroke,opacity] duration-300" :class="circleClass('D')" />
           <text y="-1" text-anchor="middle" class="text-[13px] font-bold" :class="nodeTextClass('D')">D</text>
           <text y="12" text-anchor="middle" class="text-[8.5px]" :class="nodeTextClass('D')">{{ curStep.colors.D === 'swept' ? '已回收' : '白色孤岛' }}</text>
           <text x="36" y="4" class="fill-slate-400 text-[10px]">← 无 Root 引用 (真垃圾)</text>
@@ -621,7 +621,7 @@ function colorLabel(c: NodeColor) {
       </p>
       <p class="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">{{ curStep.speech }}</p>
       <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-        <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+        <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
         <span>{{ curStep.tip }}</span>
       </p>
     </div>
@@ -657,7 +657,7 @@ function colorLabel(c: NodeColor) {
         <button
           v-for="(_, i) in activeSteps"
           :key="i"
-          class="h-2 rounded-full transition-all"
+          class="h-2 rounded-full transition-[width,background-color] duration-200"
           :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
           :title="`第 ${i + 1} 步`"
           @click="stopPlay(); stepIdx = i"

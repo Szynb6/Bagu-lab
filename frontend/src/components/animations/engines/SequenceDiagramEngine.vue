@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Sparkles } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Lightbulb, Pause, Play, RotateCcw } from 'lucide-vue-next'
 import type { SequenceSpec, Tone } from '../types'
 
 const props = defineProps<{ spec: SequenceSpec }>()
@@ -76,28 +76,28 @@ const latestStates = computed(() => {
 
 function strokeColor(tone: Tone = 'brand') {
   const m: Record<Tone, string> = {
-    slate: 'text-slate-500 stroke-slate-500',
+    slate: 'text-[#5E5A52] stroke-[#5E5A52] dark:text-[#A8A397] dark:stroke-[#A8A397]',
     brand: 'text-brand-600 stroke-brand-600 dark:text-brand-400 dark:stroke-brand-400',
-    emerald: 'text-emerald-600 stroke-emerald-600 dark:text-emerald-400 dark:stroke-emerald-400',
-    amber: 'text-amber-600 stroke-amber-600 dark:text-amber-400 dark:stroke-amber-400',
-    red: 'text-red-600 stroke-red-600 dark:text-red-400 dark:stroke-red-400',
-    indigo: 'text-indigo-600 stroke-indigo-600 dark:text-indigo-400 dark:stroke-indigo-400',
-    purple: 'text-purple-600 stroke-purple-600 dark:text-purple-400 dark:stroke-purple-400',
-    cyan: 'text-cyan-600 stroke-cyan-600 dark:text-cyan-400 dark:stroke-cyan-400',
+    emerald: 'text-emerald-700 stroke-emerald-700 dark:text-emerald-400 dark:stroke-emerald-400',
+    amber: 'text-amber-700 stroke-amber-700 dark:text-amber-400 dark:stroke-amber-400',
+    red: 'text-red-700 stroke-red-700 dark:text-red-400 dark:stroke-red-400',
+    indigo: 'text-slate-600 stroke-slate-600 dark:text-slate-300 dark:stroke-slate-300',
+    purple: 'text-stone-600 stroke-stone-600 dark:text-stone-300 dark:stroke-stone-300',
+    cyan: 'text-teal-700 stroke-teal-700 dark:text-teal-400 dark:stroke-teal-400',
   }
   return m[tone]
 }
 
 function pillFill(tone: Tone = 'slate') {
   const m: Record<Tone, string> = {
-    slate: 'fill-slate-100 stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600',
-    brand: 'fill-brand-50 stroke-brand-300 dark:fill-brand-500/20 dark:stroke-brand-500/50',
-    emerald: 'fill-emerald-50 stroke-emerald-300 dark:fill-emerald-500/20 dark:stroke-emerald-500/50',
-    amber: 'fill-amber-50 stroke-amber-300 dark:fill-amber-500/20 dark:stroke-amber-500/50',
-    red: 'fill-red-50 stroke-red-400 dark:fill-red-500/20 dark:stroke-red-500/50',
-    indigo: 'fill-indigo-50 stroke-indigo-300 dark:fill-indigo-500/20 dark:stroke-indigo-500/50',
-    purple: 'fill-purple-50 stroke-purple-300 dark:fill-purple-500/20 dark:stroke-purple-500/50',
-    cyan: 'fill-cyan-50 stroke-cyan-300 dark:fill-cyan-500/20 dark:stroke-cyan-500/50',
+    slate: 'fill-[#F4F2EC] stroke-[#D4D0C5] dark:fill-[#22211E] dark:stroke-[#3B3933]',
+    brand: 'fill-brand-50 stroke-brand-300 dark:fill-brand-950/60 dark:stroke-brand-700',
+    emerald: 'fill-emerald-50 stroke-emerald-300 dark:fill-emerald-950/50 dark:stroke-emerald-700',
+    amber: 'fill-amber-50 stroke-amber-300 dark:fill-amber-950/50 dark:stroke-amber-700',
+    red: 'fill-red-50 stroke-red-400 dark:fill-red-950/50 dark:stroke-red-700',
+    indigo: 'fill-slate-100 stroke-slate-300 dark:fill-slate-800 dark:stroke-slate-600',
+    purple: 'fill-stone-100 stroke-stone-300 dark:fill-stone-800 dark:stroke-stone-600',
+    cyan: 'fill-teal-50 stroke-teal-300 dark:fill-teal-950/50 dark:stroke-teal-700',
   }
   return m[tone]
 }
@@ -110,26 +110,27 @@ const uid = `sq-${Math.random().toString(36).slice(2, 8)}`
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div
         v-if="spec.scenarios.length > 1"
-        class="inline-flex flex-wrap rounded-xl border border-slate-200 bg-slate-100/80 p-0.5 text-xs dark:border-slate-700 dark:bg-slate-800"
+        class="inline-flex flex-wrap rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-0.5 text-xs"
       >
         <button
           v-for="(sc, i) in spec.scenarios"
           :key="sc.id"
-          class="rounded-lg px-2.5 py-1 font-medium transition"
-          :class="i === scenarioIdx ? 'bg-white text-brand-700 shadow-xs dark:bg-slate-900 dark:text-brand-300' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+          type="button"
+          class="rounded-md px-2.5 py-1 font-medium transition-colors"
+          :class="i === scenarioIdx ? 'bg-[var(--bg-surface)] text-[#C84B31] dark:text-[#E06246]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
           @click="selectScenario(i)"
         >
           {{ sc.label }}
         </button>
       </div>
-      <span v-else class="text-xs font-medium text-slate-400">时序交互演练</span>
+      <span v-else class="text-xs font-medium text-[var(--text-muted)]">时序交互演练</span>
 
-      <span class="rounded-full bg-brand-100/80 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+      <span class="rounded border border-[#EFC9BF] bg-[#FBF0ED] px-2 py-0.5 font-mono text-[11px] font-semibold tabular-nums text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]">
         {{ step.badge }} · {{ stepIdx + 1 }}/{{ scenario.steps.length }}
       </span>
     </div>
 
-    <div class="overflow-x-auto rounded-xl border border-slate-200/80 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-950/70">
+    <div class="overflow-x-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-2.5">
       <svg :viewBox="`0 0 ${W} ${svgHeight}`" class="mx-auto w-full min-w-[540px] max-w-[760px] select-none">
         <defs>
           <marker :id="`${uid}-arr`" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -143,29 +144,29 @@ const uid = `sq-${Math.random().toString(36).slice(2, 8)}`
             y1="62"
             :x2="actorX[a.id]"
             :y2="svgHeight - 14"
-            stroke-width="1.5"
+            stroke-width="1.4"
             stroke-dasharray="4 4"
-            class="stroke-slate-200 dark:stroke-slate-700"
+            class="stroke-[#D4D0C5] dark:stroke-[#3B3933]"
           />
           <rect
             :x="(actorX[a.id] ?? 0) - 62"
             y="10"
             width="124"
             height="44"
-            rx="11"
-            stroke-width="1.6"
+            rx="10"
+            stroke-width="1.5"
             :class="pillFill(a.tone ?? 'slate')"
           />
-          <text :x="actorX[a.id]" :y="a.sub ? 29 : 36" text-anchor="middle" class="fill-slate-800 text-[11.5px] font-semibold dark:fill-slate-100">
+          <text :x="actorX[a.id]" :y="a.sub ? 29 : 36" text-anchor="middle" class="fill-[#161614] text-[11.5px] font-semibold dark:fill-[#ECEAE4]">
             {{ a.label }}
           </text>
-          <text v-if="a.sub" :x="actorX[a.id]" y="44" text-anchor="middle" class="fill-slate-400 text-[9.5px]">
+          <text v-if="a.sub" :x="actorX[a.id]" y="44" text-anchor="middle" class="fill-[#736E64] text-[9.5px] dark:fill-[#A8A397]">
             {{ a.sub }}
           </text>
 
           <g v-if="latestStates[a.id]" :transform="`translate(${(actorX[a.id] ?? 0) - 54}, 60)`">
-            <rect width="108" height="22" rx="11" stroke-width="1.2" :class="pillFill(latestStates[a.id]!.tone ?? 'brand')" />
-            <text x="54" y="14.5" text-anchor="middle" class="fill-slate-700 font-mono text-[9.5px] font-semibold dark:fill-slate-100">
+            <rect width="108" height="22" rx="8" stroke-width="1.2" :class="pillFill(latestStates[a.id]!.tone ?? 'brand')" />
+            <text x="54" y="14.5" text-anchor="middle" class="fill-[#161614] font-mono text-[9.5px] font-semibold dark:fill-[#ECEAE4]">
               {{ latestStates[a.id]!.text }}
             </text>
           </g>
@@ -189,7 +190,7 @@ const uid = `sq-${Math.random().toString(36).slice(2, 8)}`
               <text
                 :x="(actorX[item.msg.from] ?? 0) + 48"
                 :y="119 + rowIdx * 42"
-                class="fill-slate-700 text-[10.5px] font-semibold dark:fill-slate-200"
+                class="fill-[#161614] text-[10.5px] font-semibold dark:fill-[#ECEAE4]"
               >
                 {{ item.msg.label }}
               </text>
@@ -211,7 +212,7 @@ const uid = `sq-${Math.random().toString(36).slice(2, 8)}`
                 v-if="item.msg.lost"
                 :x="((actorX[item.msg.from] ?? 0) + (actorX[item.msg.to] ?? 0)) / 2 + 8"
                 :y="118 + rowIdx * 42"
-                class="fill-red-600 text-[12px] font-bold"
+                class="fill-red-700 text-[12px] font-bold dark:fill-red-400"
               >
                 ✕
               </text>
@@ -220,7 +221,7 @@ const uid = `sq-${Math.random().toString(36).slice(2, 8)}`
                 :y="106 + rowIdx * 42"
                 text-anchor="middle"
                 class="text-[10.5px] font-semibold"
-                :class="item.msg.lost ? 'fill-red-600 dark:fill-red-400' : 'fill-slate-700 dark:fill-slate-200'"
+                :class="item.msg.lost ? 'fill-red-700 dark:fill-red-400' : 'fill-[#161614] dark:fill-[#ECEAE4]'"
               >
                 {{ item.msg.label }}
               </text>
@@ -232,7 +233,7 @@ const uid = `sq-${Math.random().toString(36).slice(2, 8)}`
             :transform="`translate(${(actorX[item.callout.actor] ?? 100) - 72}, ${100 + rowIdx * 42})`"
           >
             <rect width="144" height="24" rx="8" stroke-width="1.3" :class="pillFill(item.callout.tone ?? 'amber')" />
-            <text x="72" y="15.5" text-anchor="middle" class="fill-slate-800 text-[10px] font-semibold dark:fill-slate-100">
+            <text x="72" y="15.5" text-anchor="middle" class="fill-[#161614] text-[10px] font-semibold dark:fill-[#ECEAE4]">
               {{ item.callout.text }}
             </text>
           </g>
@@ -240,11 +241,11 @@ const uid = `sq-${Math.random().toString(36).slice(2, 8)}`
       </svg>
     </div>
 
-    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 text-sm dark:border-slate-800 dark:bg-slate-900/80">
-      <p class="font-semibold text-slate-900 dark:text-white">{{ step.title }}</p>
-      <p class="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">{{ step.speech }}</p>
-      <p class="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50/90 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-        <Sparkles class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+    <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-3.5 text-sm">
+      <p class="font-semibold text-[var(--text-primary)]">{{ step.title }}</p>
+      <p class="mt-1 leading-relaxed text-[var(--text-secondary)]">{{ step.speech }}</p>
+      <p class="mt-2.5 flex items-start gap-1.5 rounded-md border border-amber-300/70 bg-amber-50/70 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-700/40 dark:bg-amber-950/35 dark:text-amber-200">
+        <Lightbulb class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
         <span>{{ step.tip }}</span>
       </p>
     </div>
@@ -254,24 +255,26 @@ const uid = `sq-${Math.random().toString(36).slice(2, 8)}`
         <button
           v-for="(_, i) in scenario.steps"
           :key="i"
-          class="h-2 rounded-full transition-all"
-          :class="i === stepIdx ? 'w-6 bg-brand-600' : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700'"
+          type="button"
+          class="h-2 rounded-full transition-[width,background-color] duration-200"
+          :class="i === stepIdx ? 'w-6 bg-[#C84B31] dark:bg-[#E06246]' : 'w-2 bg-[var(--border-strong)] hover:bg-[var(--text-muted)]'"
+          :aria-label="`跳转到第 ${i + 1} 步`"
           @click="stopPlay(); stepIdx = i"
         />
       </div>
 
       <div class="flex items-center gap-2">
-        <button class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx === 0" @click="stopPlay(); stepIdx--">
+        <button type="button" class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx === 0" @click="stopPlay(); stepIdx--">
           <ChevronLeft class="h-3.5 w-3.5" /> 上一步
         </button>
-        <button class="btn-primary h-8 px-3 text-xs" @click="togglePlay">
+        <button type="button" class="btn-primary h-8 px-3 text-xs" @click="togglePlay">
           <component :is="playing ? Pause : Play" class="h-3.5 w-3.5" />
           {{ playing ? '暂停' : '自动播放' }}
         </button>
-        <button class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx >= scenario.steps.length - 1" @click="stopPlay(); stepIdx++">
+        <button type="button" class="btn-ghost h-8 px-2.5 text-xs" :disabled="stepIdx >= scenario.steps.length - 1" @click="stopPlay(); stepIdx++">
           下一步 <ChevronRight class="h-3.5 w-3.5" />
         </button>
-        <button class="btn-ghost h-8 px-2 text-xs" title="重置" @click="stopPlay(); stepIdx = 0">
+        <button type="button" class="btn-ghost h-8 px-2 text-xs" title="重置" aria-label="重置动画到第一步" @click="stopPlay(); stepIdx = 0">
           <RotateCcw class="h-3.5 w-3.5" />
         </button>
       </div>
