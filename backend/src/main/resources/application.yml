@@ -46,6 +46,26 @@ spring:
           max-idle: 8
           min-idle: 2
 
+  # 163 邮箱 SMTP 配置（MAIL_PASSWORD 填写 163 邮箱客户端授权码）
+  mail:
+    host: ${MAIL_HOST:smtp.163.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:17807078903@163.com}
+    password: ${MAIL_PASSWORD:MDfDz36axbftEC9A}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          socketFactory:
+            port: ${MAIL_PORT:465}
+            class: javax.net.ssl.SSLSocketFactory
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+
 # MyBatis-Plus
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml

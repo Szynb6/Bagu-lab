@@ -2,19 +2,28 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { authApi } from '@/api'
 import { TOKEN_KEY } from '@/api/client'
-import type { UserInfo } from '@/types'
+import type { LoginResult, RegisterPayload, UserInfo } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem(TOKEN_KEY))
   const user = ref<UserInfo | null>(JSON.parse(localStorage.getItem('bagu:user') ?? 'null'))
   const isLoggedIn = computed(() => !!token.value)
 
-  async function login(username: string, password: string) {
-    const res = await authApi.login(username, password)
+  function applySession(res: LoginResult) {
     token.value = res.tokenValue
     user.value = res.user
     localStorage.setItem(TOKEN_KEY, res.tokenValue)
     localStorage.setItem('bagu:user', JSON.stringify(res.user))
+  }
+
+  async function login(email: string, password: string, captchaToken: string) {
+    const res = await authApi.login(email, password, captchaToken)
+    applySession(res)
+  }
+
+  async function register(payload: RegisterPayload) {
+    const res = await authApi.register(payload)
+    applySession(res)
   }
 
   async function logout() {
@@ -28,5 +37,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { token, user, isLoggedIn, login, logout }
+  return { token, user, isLoggedIn, login, register, logout }
 })

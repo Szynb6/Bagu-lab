@@ -159,7 +159,7 @@ async function logout() {
             :aria-expanded="menuOpen"
             @click="menuOpen = !menuOpen"
           >
-            {{ auth.user?.nickname?.slice(0, 1).toUpperCase() ?? 'U' }}
+            {{ (auth.user?.username || auth.user?.nickname)?.slice(0, 1).toUpperCase() ?? 'U' }}
           </button>
 
           <Transition name="fade">
@@ -168,10 +168,15 @@ async function logout() {
 
           <Transition name="slide-up">
             <div v-if="menuOpen" class="card absolute right-0 z-50 mt-2 w-60 p-2 text-sm shadow-sm">
-              <div class="flex items-center gap-2 px-3 py-2">
-                <User class="h-4 w-4 text-[var(--text-muted)]" />
-                <span class="font-medium text-[var(--text-primary)]">{{ auth.user?.nickname }}</span>
-                <span class="ml-auto font-mono text-xs tabular-nums text-[var(--text-muted)]">每日 {{ auth.user?.dailyGoal }} 题</span>
+              <div class="px-3 py-2">
+                <div class="flex items-center gap-2">
+                  <User class="h-4 w-4 text-[var(--text-muted)]" />
+                  <span class="truncate font-medium text-[var(--text-primary)]">{{ auth.user?.username || auth.user?.nickname }}</span>
+                  <span class="ml-auto shrink-0 font-mono text-xs tabular-nums text-[var(--text-muted)]">每日 {{ auth.user?.dailyGoal }} 题</span>
+                </div>
+                <p v-if="auth.user?.email" class="mt-0.5 truncate pl-6 font-mono text-[11px] text-[var(--text-muted)]">
+                  {{ auth.user.email }}
+                </p>
               </div>
               <div class="my-1 h-px bg-[var(--border-default)]" />
               <RouterLink

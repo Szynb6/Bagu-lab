@@ -25,9 +25,43 @@ export interface PageResult<T> {
 export interface UserInfo {
   id: number
   username: string
+  email?: string | null
   nickname: string
   role: 'USER' | 'ADMIN'
   dailyGoal: number
+}
+
+export interface RegisterPayload {
+  email: string
+  code: string
+  username: string
+  password: string
+}
+
+export interface ResetPasswordPayload {
+  email: string
+  code: string
+  newPassword: string
+}
+
+export interface SliderCaptchaData {
+  captchaId: string
+  backgroundImage: string
+  blockImage: string
+  blockY: number
+  canvasWidth: number
+  canvasHeight: number
+}
+
+export interface SliderVerifyPayload {
+  captchaId: string
+  moveX: number
+  durationMs: number
+}
+
+export interface SliderVerifyResult {
+  passed: boolean
+  captchaToken: string | null
 }
 
 export interface LoginResult {

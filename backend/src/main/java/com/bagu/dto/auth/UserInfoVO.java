@@ -12,6 +12,7 @@ public class UserInfoVO {
 
     private Long id;
     private String username;
+    private String email;
     private String nickname;
     private String role;
     private Integer dailyGoal;
@@ -20,6 +21,7 @@ public class UserInfoVO {
         return UserInfoVO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
+                .email(user.getEmail())
                 .nickname(user.getNickname())
                 .role(user.getRole())
                 .dailyGoal(user.getDailyGoal())

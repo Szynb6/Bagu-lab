@@ -16,6 +16,8 @@ public class SysUser {
 
     private String username;
 
+    private String email;
+
     private String passwordHash;
 
     private String nickname;

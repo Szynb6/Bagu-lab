@@ -4,12 +4,24 @@
 import { request } from './client'
 import type {
   DashboardData, LoginResult, ModuleMeta, PageResult, QuestionFilter,
-  QuestionItem, QuestionWithProgress, QueueRequest, Rating, ReviewResult, UserInfo,
+  QuestionItem, QuestionWithProgress, QueueRequest, Rating, RegisterPayload,
+  ResetPasswordPayload, ReviewResult, SliderCaptchaData, SliderVerifyPayload,
+  SliderVerifyResult, UserInfo,
 } from '@/types'
 
 export const authApi = {
-  login: (username: string, password: string) =>
-    request<LoginResult>({ url: '/auth/login', method: 'POST', data: { username, password } }),
+  getSliderCaptcha: () =>
+    request<SliderCaptchaData>({ url: '/auth/captcha/slider', method: 'GET' }),
+  verifySliderCaptcha: (data: SliderVerifyPayload) =>
+    request<SliderVerifyResult>({ url: '/auth/captcha/verify', method: 'POST', data }),
+  login: (email: string, password: string, captchaToken: string) =>
+    request<LoginResult>({ url: '/auth/login', method: 'POST', data: { email, password, captchaToken } }),
+  sendCode: (email: string, scene: 'register' | 'reset', captchaToken: string) =>
+    request<void>({ url: '/auth/send-code', method: 'POST', data: { email, scene, captchaToken } }),
+  register: (data: RegisterPayload) =>
+    request<LoginResult>({ url: '/auth/register', method: 'POST', data }),
+  resetPassword: (data: ResetPasswordPayload) =>
+    request<void>({ url: '/auth/reset-password', method: 'POST', data }),
   logout: () => request<void>({ url: '/auth/logout', method: 'POST' }),
   me: () => request<UserInfo>({ url: '/auth/me' }),
 }

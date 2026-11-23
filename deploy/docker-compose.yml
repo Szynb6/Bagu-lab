@@ -28,6 +28,10 @@ services:
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
       BAGU_RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
       BAGU_RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
+      MAIL_HOST: ${MAIL_HOST:-smtp.163.com}
+      MAIL_PORT: ${MAIL_PORT:-465}
+      MAIL_USERNAME: ${MAIL_USERNAME:-17807078903@163.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-MDfDz36axbftEC9A}
     volumes:
       - ./app.jar:/app/app.jar:ro
     networks:
