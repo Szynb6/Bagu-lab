@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import com.bagu.common.BizException;
 import com.bagu.common.ErrorCode;
+import com.bagu.dto.auth.DeleteAccountRequest;
 import com.bagu.dto.auth.LoginRequest;
 import com.bagu.dto.auth.LoginResponse;
 import com.bagu.dto.auth.RegisterRequest;
@@ -29,7 +30,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +45,10 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    private static final ZoneId SHANGHAI = ZoneId.of("Asia/Shanghai");
+    private static final DateTimeFormatter YM_FMT = DateTimeFormatter.ofPattern("yyyyMM");
+    private static final DateTimeFormatter YMD_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private static final String KEY_CODE_PREFIX = "bagu:auth:code:";
     private static final String KEY_TRIES_PREFIX = "bagu:auth:tries:";
@@ -90,53 +101,51 @@ public class AuthServiceImpl implements AuthService {
             throw new BizException(ErrorCode.NOT_FOUND, "该邮箱尚未注册任何账号");
         }
 
-        // 1. 60 秒发送冷却检查
-        String cooldownKey = KEY_COOLDOWN_PREFIX + email;
-        Long remainSec = stringRedisTemplate.getExpire(cooldownKey, TimeUnit.SECONDS);
-        if (remainSec != null && remainSec > 0) {
-            throw new BizException(ErrorCode.BAD_REQUEST, "验证码发送过于频繁，请 " + remainSec + " 秒后再试");
+        dispatchVerificationCode(email, scene, clientIp);
+    }
+
+    @Override
+    public void sendDeleteAccountCode(String clientIp) {
+        long userId = StpUtil.getLoginIdAsLong();
+        SysUser user = sysUserMapper.selectById(userId);
+        if (user == null) {
+            StpUtil.logout();
+            throw new BizException(ErrorCode.UNAUTHORIZED, "用户不存在或登录已失效");
+        }
+        if (!StringUtils.hasText(user.getEmail())) {
+            throw new BizException(ErrorCode.BAD_REQUEST, "当前账号未绑定电子邮箱，无法发送注销验证码");
         }
 
-        // 2. 单 IP 每日上限检查
-        String ipKey = KEY_DAILY_IP_PREFIX + (StringUtils.hasText(clientIp) ? clientIp : "unknown");
-        Long dailyCount = stringRedisTemplate.opsForValue().increment(ipKey);
-        if (dailyCount != null && dailyCount == 1L) {
-            stringRedisTemplate.expire(ipKey, Duration.ofHours(24));
+        String email = normalizeEmail(user.getEmail());
+        dispatchVerificationCode(email, "delete", clientIp);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteAccount(DeleteAccountRequest request) {
+        long userId = StpUtil.getLoginIdAsLong();
+        SysUser user = sysUserMapper.selectById(userId);
+        if (user == null) {
+            StpUtil.logout();
+            throw new BizException(ErrorCode.UNAUTHORIZED, "用户不存在或登录已失效");
         }
-        if (dailyCount != null && dailyCount > MAX_DAILY_SEND_PER_IP) {
-            throw new BizException(ErrorCode.BAD_REQUEST, "今日验证码请求次数已达上限，请明日再试");
-        }
-
-        // 3. 生成 6 位数字验证码并写入 Redis (5 分钟有效)
-        String code = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
-        String codeKey = buildCodeKey(scene, email);
-        String triesKey = buildTriesKey(scene, email);
-
-        stringRedisTemplate.opsForValue().set(codeKey, code, CODE_TTL);
-        stringRedisTemplate.delete(triesKey);
-        stringRedisTemplate.opsForValue().set(cooldownKey, "1", COOLDOWN_TTL);
-
-        // 4. 发送 163 邮件（若本地未配置发件账号则打印日志降级）
-        if (!StringUtils.hasText(mailUsername)) {
-            if ("prod".equalsIgnoreCase(activeProfile)) {
-                stringRedisTemplate.delete(cooldownKey);
-                throw new BizException(ErrorCode.INTERNAL_ERROR, "服务端尚未配置 163 发件邮箱 (MAIL_USERNAME / MAIL_PASSWORD)");
-            }
-            log.warn("================================================================");
-            log.warn("[本地开发模式] 未配置 MAIL_USERNAME，邮箱 {} 的验证码为: {}", email, code);
-            log.warn("================================================================");
-            return;
+        if (!StringUtils.hasText(user.getEmail())) {
+            throw new BizException(ErrorCode.BAD_REQUEST, "当前账号未绑定电子邮箱，无法校验注销验证码");
         }
 
-        try {
-            sendHtmlVerificationMail(email, code, scene);
-            log.info("已向邮箱 {} 发送 [{}] 验证码邮件", email, scene);
-        } catch (Exception e) {
-            stringRedisTemplate.delete(cooldownKey);
-            stringRedisTemplate.delete(codeKey);
-            log.error("发送验证码邮件至 {} 失败", email, e);
-            throw new BizException(ErrorCode.INTERNAL_ERROR, "验证码邮件发送失败，请检查邮箱地址或稍后重试");
-        }
+        String email = normalizeEmail(user.getEmail());
+        // 1. 校验并销毁 Redis 中的注销验证码
+        verifyAndConsumeCode("delete", email, request.getCode().trim());
+
+        // 2. 删除 sys_user 记录（PostgreSQL 外键 ON DELETE CASCADE 自动级联删除 study_progress 与 study_review_log）
+        sysUserMapper.deleteById(userId);
+
+        // 3. 清理该用户在 Redis 中的打卡 Bitmap、今日刷题计数与邮箱冷却锁
+        purgeUserRedisData(userId, email);
+
+        // 4. 强制注销该用户在所有设备（PC + 移动端）上的 Sa-Token 会话
+        StpUtil.logout(userId);
+        log.info("用户账户已永久注销并清理全部关联数据: userId={}, email={}", userId, email);
     }
 
     @Override
@@ -203,6 +212,78 @@ public class AuthServiceImpl implements AuthService {
         return UserInfoVO.from(user);
     }
 
+    private void dispatchVerificationCode(String email, String scene, String clientIp) {
+        // 1. 60 秒发送冷却检查
+        String cooldownKey = KEY_COOLDOWN_PREFIX + email;
+        Long remainSec = stringRedisTemplate.getExpire(cooldownKey, TimeUnit.SECONDS);
+        if (remainSec != null && remainSec > 0) {
+            throw new BizException(ErrorCode.BAD_REQUEST, "验证码发送过于频繁，请 " + remainSec + " 秒后再试");
+        }
+
+        // 2. 单 IP 每日上限检查
+        String ipKey = KEY_DAILY_IP_PREFIX + (StringUtils.hasText(clientIp) ? clientIp : "unknown");
+        Long dailyCount = stringRedisTemplate.opsForValue().increment(ipKey);
+        if (dailyCount != null && dailyCount == 1L) {
+            stringRedisTemplate.expire(ipKey, Duration.ofHours(24));
+        }
+        if (dailyCount != null && dailyCount > MAX_DAILY_SEND_PER_IP) {
+            throw new BizException(ErrorCode.BAD_REQUEST, "今日验证码请求次数已达上限，请明日再试");
+        }
+
+        // 3. 生成 6 位数字验证码并写入 Redis (5 分钟有效)
+        String code = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
+        String codeKey = buildCodeKey(scene, email);
+        String triesKey = buildTriesKey(scene, email);
+
+        stringRedisTemplate.opsForValue().set(codeKey, code, CODE_TTL);
+        stringRedisTemplate.delete(triesKey);
+        stringRedisTemplate.opsForValue().set(cooldownKey, "1", COOLDOWN_TTL);
+
+        // 4. 发送 163 邮件（若本地未配置发件账号则打印日志降级）
+        if (!StringUtils.hasText(mailUsername)) {
+            if ("prod".equalsIgnoreCase(activeProfile)) {
+                stringRedisTemplate.delete(cooldownKey);
+                throw new BizException(ErrorCode.INTERNAL_ERROR, "服务端尚未配置 163 发件邮箱 (MAIL_USERNAME / MAIL_PASSWORD)");
+            }
+            log.warn("================================================================");
+            log.warn("[本地开发模式] 未配置 MAIL_USERNAME，邮箱 {} 的 [{}] 验证码为: {}", email, scene, code);
+            log.warn("================================================================");
+            return;
+        }
+
+        try {
+            sendHtmlVerificationMail(email, code, scene);
+            log.info("已向邮箱 {} 发送 [{}] 验证码邮件", email, scene);
+        } catch (Exception e) {
+            stringRedisTemplate.delete(cooldownKey);
+            stringRedisTemplate.delete(codeKey);
+            log.error("发送验证码邮件至 {} 失败", email, e);
+            throw new BizException(ErrorCode.INTERNAL_ERROR, "验证码邮件发送失败，请检查邮箱地址或稍后重试");
+        }
+    }
+
+    private void purgeUserRedisData(long userId, String email) {
+        try {
+            List<String> keysToDelete = new ArrayList<>();
+            LocalDate today = LocalDate.now(SHANGHAI);
+            YearMonth currentYm = YearMonth.from(today);
+            for (int i = 0; i <= 12; i++) {
+                keysToDelete.add("bagu:checkin:" + userId + ":" + currentYm.minusMonths(i).format(YM_FMT));
+            }
+            for (int i = 0; i <= 2; i++) {
+                keysToDelete.add("bagu:daily:cnt:" + userId + ":" + today.minusDays(i).format(YMD_FMT));
+            }
+            keysToDelete.add(KEY_COOLDOWN_PREFIX + email);
+            for (String sc : List.of("register", "reset", "delete")) {
+                keysToDelete.add(buildCodeKey(sc, email));
+                keysToDelete.add(buildTriesKey(sc, email));
+            }
+            stringRedisTemplate.delete(keysToDelete);
+        } catch (Exception e) {
+            log.warn("清理注销用户 Redis 缓存键时发生非致命异常 userId={}", userId, e);
+        }
+    }
+
     private LoginResponse issueToken(SysUser user) {
         StpUtil.login(user.getId());
         SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
@@ -246,7 +327,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void sendHtmlVerificationMail(String toEmail, String code, String scene) throws Exception {
-        String actionTitle = "reset".equals(scene) ? "重置登录密码" : "注册学习工作台账号";
+        String actionTitle = switch (scene) {
+            case "reset" -> "重置登录密码";
+            case "delete" -> "永久注销并删除学习账户";
+            default -> "注册学习工作台账号";
+        };
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
         helper.setFrom(new InternetAddress(mailUsername, "Bagu Lab 工程记忆手稿", "UTF-8"));

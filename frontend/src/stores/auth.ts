@@ -9,7 +9,16 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<UserInfo | null>(JSON.parse(localStorage.getItem('bagu:user') ?? 'null'))
   const isLoggedIn = computed(() => !!token.value)
 
+  function clearUserSessionStorage() {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem('bagu:user')
+    localStorage.removeItem('bagu:lastSlug')
+    sessionStorage.removeItem('bagu:customQueue')
+    sessionStorage.removeItem('bagu:customLabel')
+  }
+
   function applySession(res: LoginResult) {
+    clearUserSessionStorage()
     token.value = res.tokenValue
     user.value = res.user
     localStorage.setItem(TOKEN_KEY, res.tokenValue)
@@ -32,10 +41,16 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       token.value = null
       user.value = null
-      localStorage.removeItem(TOKEN_KEY)
-      localStorage.removeItem('bagu:user')
+      clearUserSessionStorage()
     }
   }
 
-  return { token, user, isLoggedIn, login, register, logout }
+  async function deleteAccount(code: string) {
+    await authApi.deleteAccount(code)
+    token.value = null
+    user.value = null
+    clearUserSessionStorage()
+  }
+
+  return { token, user, isLoggedIn, login, register, logout, deleteAccount }
 })

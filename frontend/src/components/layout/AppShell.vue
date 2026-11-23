@@ -2,9 +2,10 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  BookMarked, BookOpen, ChevronsLeft, ChevronsRight, Home, Layers, LogOut, Moon,
-  Star, Sun, TriangleAlert, User, Zap,
+  BookMarked, BookOpen, CheckCircle2, ChevronsLeft, ChevronsRight, Home, Layers, Loader2, LogOut, Mail, Moon,
+  Star, Sun, Trash2, TriangleAlert, User, X, Zap,
 } from 'lucide-vue-next'
+import { authApi } from '@/api'
 import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
 
@@ -14,6 +15,16 @@ const route = useRoute()
 const router = useRouter()
 const menuOpen = ref(false)
 
+// 注销账户弹窗状态
+const deleteModalOpen = ref(false)
+const deleteCode = ref('')
+const deleteSending = ref(false)
+const deleteCooldown = ref(0)
+const deleteSubmitting = ref(false)
+const deleteError = ref('')
+const deleteInfo = ref('')
+let deleteCooldownTimer: number | undefined
+
 onMounted(() => {
   ui.loadModules().catch(() => {})
   window.addEventListener('keydown', onGlobalKey)
@@ -21,11 +32,16 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onGlobalKey)
+  clearInterval(deleteCooldownTimer)
 })
 
 function onGlobalKey(e: KeyboardEvent) {
-  if (e.key === 'Escape' && menuOpen.value) {
-    menuOpen.value = false
+  if (e.key === 'Escape') {
+    if (deleteModalOpen.value && !deleteSubmitting.value) {
+      deleteModalOpen.value = false
+    } else if (menuOpen.value) {
+      menuOpen.value = false
+    }
   }
 }
 
@@ -60,6 +76,69 @@ async function logout() {
   menuOpen.value = false
   await auth.logout()
   router.replace({ name: 'login' })
+}
+
+function openDeleteModal() {
+  menuOpen.value = false
+  deleteCode.value = ''
+  deleteError.value = ''
+  deleteInfo.value = ''
+  deleteModalOpen.value = true
+}
+
+function startDeleteCooldown(seconds = 60) {
+  deleteCooldown.value = seconds
+  clearInterval(deleteCooldownTimer)
+  deleteCooldownTimer = window.setInterval(() => {
+    if (deleteCooldown.value > 1) {
+      deleteCooldown.value -= 1
+    } else {
+      deleteCooldown.value = 0
+      clearInterval(deleteCooldownTimer)
+    }
+  }, 1000)
+}
+
+async function onSendDeleteCode() {
+  if (deleteSending.value || deleteCooldown.value > 0) return
+  deleteError.value = ''
+  deleteInfo.value = ''
+  if (!auth.user?.email) {
+    deleteError.value = '当前账号未绑定邮箱，无法发送注销验证码'
+    return
+  }
+
+  deleteSending.value = true
+  try {
+    await authApi.sendDeleteCode()
+    startDeleteCooldown(60)
+    deleteInfo.value = `注销验证码已发送至 ${auth.user.email}（5 分钟内有效）`
+  } catch (e) {
+    deleteError.value = (e as Error).message
+  } finally {
+    deleteSending.value = false
+  }
+}
+
+async function confirmDeleteAccount() {
+  const trimmed = deleteCode.value.trim()
+  deleteError.value = ''
+  if (!/^\d{6}$/.test(trimmed)) {
+    deleteError.value = '请输入 6 位数字邮箱验证码'
+    return
+  }
+
+  deleteSubmitting.value = true
+  try {
+    await auth.deleteAccount(trimmed)
+    deleteModalOpen.value = false
+    ui.showToast('账户及全部个人学习数据已永久注销')
+    router.replace({ name: 'login' })
+  } catch (e) {
+    deleteError.value = (e as Error).message
+  } finally {
+    deleteSubmitting.value = false
+  }
 }
 </script>
 
@@ -189,10 +268,17 @@ async function logout() {
               <div class="my-1 h-px bg-[var(--border-default)]" />
               <button
                 type="button"
-                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[#96311D] transition-colors hover:bg-[#FBF0ED] dark:text-[#EFC0B3] dark:hover:bg-[#2E1B16]"
+                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]"
                 @click="logout"
               >
                 <LogOut class="h-4 w-4" /> 退出登录
+              </button>
+              <button
+                type="button"
+                class="mt-0.5 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-[#96311D] transition-colors hover:bg-[#FBF0ED] dark:text-[#EFC0B3] dark:hover:bg-[#2E1B16]"
+                @click="openDeleteModal"
+              >
+                <Trash2 class="h-3.5 w-3.5" /> 注销账户...
               </button>
             </div>
           </Transition>
@@ -228,5 +314,119 @@ async function logout() {
         </RouterLink>
       </div>
     </nav>
+
+    <!-- 注销账户二次验证弹窗（方案 B：163 邮箱验证码核验） -->
+    <Transition name="fade">
+      <div
+        v-if="deleteModalOpen"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-account-title"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-xs"
+        @click.self="!deleteSubmitting && (deleteModalOpen = false)"
+      >
+        <form class="card w-full max-w-md overflow-hidden" @submit.prevent="confirmDeleteAccount">
+          <div class="flex items-center justify-between border-b border-[var(--border-default)] bg-[var(--bg-subtle)] px-5 py-3.5">
+            <div class="flex items-center gap-2">
+              <TriangleAlert class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" />
+              <h2 id="delete-account-title" class="text-sm font-semibold text-[var(--text-primary)]">
+                永久注销学习账户
+              </h2>
+            </div>
+            <button
+              type="button"
+              class="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+              aria-label="关闭注销弹窗"
+              :disabled="deleteSubmitting"
+              @click="deleteModalOpen = false"
+            >
+              <X class="h-4 w-4" />
+            </button>
+          </div>
+
+          <div class="space-y-4 p-5 text-sm">
+            <div class="rounded-lg border border-[#EFC9BF] bg-[#FBF0ED] p-3.5 text-xs leading-relaxed text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]">
+              <p class="font-semibold">此操作不可撤销，确认注销后将立即抹除：</p>
+              <ul class="mt-1.5 list-disc space-y-1 pl-4">
+                <li>全部 375 道题目的 SM-2 记忆进度与错题记录</li>
+                <li>所有收藏夹题目与您编写的个人助记笔记</li>
+                <li>历史刷题流水、连续打卡天数与热力图数据</li>
+              </ul>
+              <p class="mt-2 opacity-90">注销完成后，该邮箱可重新注册为全新账号。</p>
+            </div>
+
+            <div>
+              <p class="text-xs text-[var(--text-secondary)]">
+                验证邮箱：<strong class="font-mono text-[var(--text-primary)]">{{ auth.user?.email || '未绑定邮箱' }}</strong>
+              </p>
+
+              <label for="delete-account-code" class="mt-3 block text-xs font-medium text-[var(--text-primary)]">
+                输入 6 位邮箱注销验证码
+              </label>
+              <div class="mt-1.5 flex gap-2">
+                <input
+                  id="delete-account-code"
+                  v-model="deleteCode"
+                  inputmode="numeric"
+                  maxlength="6"
+                  autocomplete="one-time-code"
+                  class="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 font-mono text-sm tracking-widest text-[var(--text-primary)] outline-none transition-colors placeholder:font-sans placeholder:tracking-normal placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+                  placeholder="6 位数字验证码"
+                />
+                <button
+                  type="button"
+                  class="btn-ghost h-10 shrink-0 px-3 text-xs font-medium"
+                  :disabled="deleteSending || deleteCooldown > 0 || !auth.user?.email"
+                  @click="onSendDeleteCode"
+                >
+                  <Loader2 v-if="deleteSending" class="h-3.5 w-3.5 animate-spin" />
+                  <Mail v-else class="h-3.5 w-3.5 text-[#C84B31] dark:text-[#E06246]" />
+                  <span class="font-mono tabular-nums">
+                    {{ deleteCooldown > 0 ? `${deleteCooldown}s 后重发` : '获取验证码' }}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <p
+              v-if="deleteInfo"
+              role="status"
+              class="flex items-center gap-2 rounded-lg border border-[#B8DCD1] bg-[#EBF4F1] px-3 py-2 text-xs font-medium text-[#235749] dark:border-[#244E41] dark:bg-[#162923] dark:text-[#86CBB7]"
+            >
+              <CheckCircle2 class="h-4 w-4 shrink-0" />
+              <span>{{ deleteInfo }}</span>
+            </p>
+
+            <p
+              v-if="deleteError"
+              role="alert"
+              class="rounded-lg border border-[#EFC9BF] bg-[#FBF0ED] px-3 py-2 text-xs font-medium text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]"
+            >
+              {{ deleteError }}
+            </p>
+          </div>
+
+          <div class="flex items-center justify-end gap-2.5 border-t border-[var(--border-default)] bg-[var(--bg-subtle)]/60 px-5 py-3">
+            <button
+              type="button"
+              class="btn-ghost h-9 px-3.5 text-xs"
+              :disabled="deleteSubmitting"
+              @click="deleteModalOpen = false"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              class="btn h-9 bg-[#96311D] px-4 text-xs font-semibold text-white hover:bg-[#7B2B1C] disabled:opacity-50"
+              :disabled="deleteSubmitting || deleteCode.trim().length !== 6"
+            >
+              <Loader2 v-if="deleteSubmitting" class="h-3.5 w-3.5 animate-spin" />
+              <Trash2 v-else class="h-3.5 w-3.5" />
+              确认永久注销
+            </button>
+          </div>
+        </form>
+      </div>
+    </Transition>
   </div>
 </template>

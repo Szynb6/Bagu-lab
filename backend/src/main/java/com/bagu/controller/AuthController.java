@@ -1,6 +1,7 @@
 package com.bagu.controller;
 
 import com.bagu.common.Result;
+import com.bagu.dto.auth.DeleteAccountRequest;
 import com.bagu.dto.auth.LoginRequest;
 import com.bagu.dto.auth.LoginResponse;
 import com.bagu.dto.auth.RegisterRequest;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "认证接口", description = "邮箱密码登录、滑块拼图验证、163 邮箱验证码注册与密码找回（Sa-Token）")
+@Tag(name = "认证接口", description = "邮箱密码登录、滑块拼图验证、163 邮箱验证码注册、密码找回与账户注销（Sa-Token）")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -55,6 +56,20 @@ public class AuthController {
     @PostMapping("/send-code")
     public Result<Void> sendCode(@Valid @RequestBody SendCodeRequest request, HttpServletRequest servletRequest) {
         authService.sendEmailCode(request, resolveClientIp(servletRequest));
+        return Result.ok();
+    }
+
+    @Operation(summary = "向当前已登录用户的绑定邮箱发送账户注销验证码")
+    @PostMapping("/send-delete-code")
+    public Result<Void> sendDeleteCode(HttpServletRequest servletRequest) {
+        authService.sendDeleteAccountCode(resolveClientIp(servletRequest));
+        return Result.ok();
+    }
+
+    @Operation(summary = "校验邮箱验证码并永久注销当前账户（级联清理全部学习数据）")
+    @PostMapping("/delete-account")
+    public Result<Void> deleteAccount(@Valid @RequestBody DeleteAccountRequest request) {
+        authService.deleteAccount(request);
         return Result.ok();
     }
 

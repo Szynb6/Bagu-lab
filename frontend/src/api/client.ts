@@ -33,6 +33,9 @@ http.interceptors.response.use(
 function onUnauthorized() {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem('bagu:user')
+  localStorage.removeItem('bagu:lastSlug')
+  sessionStorage.removeItem('bagu:customQueue')
+  sessionStorage.removeItem('bagu:customLabel')
   if (!location.pathname.startsWith('/login')) {
     location.href = `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`
   }

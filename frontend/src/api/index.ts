@@ -22,6 +22,10 @@ export const authApi = {
     request<LoginResult>({ url: '/auth/register', method: 'POST', data }),
   resetPassword: (data: ResetPasswordPayload) =>
     request<void>({ url: '/auth/reset-password', method: 'POST', data }),
+  sendDeleteCode: () =>
+    request<void>({ url: '/auth/send-delete-code', method: 'POST' }),
+  deleteAccount: (code: string) =>
+    request<void>({ url: '/auth/delete-account', method: 'POST', data: { code } }),
   logout: () => request<void>({ url: '/auth/logout', method: 'POST' }),
   me: () => request<UserInfo>({ url: '/auth/me' }),
 }
