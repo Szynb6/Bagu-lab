@@ -158,7 +158,7 @@ export interface QuestionFilter {
   slug?: string
   chapterId?: number
   priorities?: Priority[]
-  status?: 'all' | 'new' | 'weak' | 'reviewing' | 'mastered' | 'starred' | 'noted'
+  status?: 'all' | 'new' | 'weak' | 'reviewing' | 'mastered' | 'starred' | 'noted' | 'animated'
   keyword?: string
   page?: number
   size?: number

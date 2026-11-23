@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 public class KnowledgeServiceImpl implements KnowledgeService {
 
     private static final String KEY_MODULES_META = "bagu:modules:meta";
-    private static final String KEY_QUESTION_DETAIL_PREFIX = "bagu:q:detail:v2:";
+    private static final String KEY_QUESTION_DETAIL_PREFIX = "bagu:q:detail:v3:";
     private static final Set<String> VALID_PRIORITIES = Set.of("P0", "P1", "P2");
 
     private final KbModuleMapper moduleMapper;

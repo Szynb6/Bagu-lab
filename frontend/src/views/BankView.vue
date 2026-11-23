@@ -42,6 +42,7 @@ const statusOptions: { value: NonNullable<QuestionFilter['status']>; label: stri
   { value: 'mastered', label: '已掌握' },
   { value: 'starred', label: '⭐ 已收藏' },
   { value: 'noted', label: '📝 有助记' },
+  { value: 'animated', label: '🎬 有动画' },
 ]
 
 const priorityOptions: { value: Priority; label: string; active: string }[] = [

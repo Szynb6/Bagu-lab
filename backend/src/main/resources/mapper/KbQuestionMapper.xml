@@ -39,6 +39,9 @@
             <when test="status == 'noted'">
                 AND sp.personal_note IS NOT NULL AND sp.personal_note &lt;&gt; ''
             </when>
+            <when test="status == 'animated'">
+                AND q.animation_key IS NOT NULL AND q.animation_key &lt;&gt; ''
+            </when>
         </choose>
     </sql>
 

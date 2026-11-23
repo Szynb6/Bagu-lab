@@ -23,7 +23,7 @@ public class QuestionQuery {
     @Schema(description = "考频多选，逗号分隔，如 P0,P1")
     private String priorities;
 
-    @Schema(description = "掌握状态：all / new / weak / reviewing / mastered / starred / noted", example = "all")
+    @Schema(description = "掌握状态：all / new / weak / reviewing / mastered / starred / noted / animated", example = "all")
     private String status = "all";
 
     @Schema(description = "列表内题干或题号模糊过滤")
