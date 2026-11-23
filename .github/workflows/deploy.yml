@@ -1,0 +1,187 @@
+name: Deploy to Cloud Server
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "选择要部署的模块"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - frontend
+          - backend
+          - deploy
+
+# 防止连续多次 push 同时覆盖服务器文件
+concurrency:
+  group: bagu-prod-deploy
+  cancel-in-progress: false
+
+jobs:
+  # 1. 检测本次推送改动了哪些目录，按需构建发布
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      deploy: ${{ steps.filter.outputs.deploy }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed modules
+        id: filter
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TARGET="${{ inputs.target }}"
+            echo "frontend=$([ "$TARGET" = "all" ] || [ "$TARGET" = "frontend" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+            echo "backend=$([ "$TARGET" = "all" ] || [ "$TARGET" = "backend" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+            echo "deploy=$([ "$TARGET" = "all" ] || [ "$TARGET" = "deploy" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            CHANGED="frontend/ backend/ deploy/"
+          else
+            CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}" || true)
+          fi
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          echo "frontend=$(echo "$CHANGED" | grep -q '^frontend/' && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "backend=$(echo "$CHANGED" | grep -q '^backend/' && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "deploy=$(echo "$CHANGED" | grep -qE '^deploy/(nginx\.conf|docker-compose\.yml)$' && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+  # 2. 构建并同步前端静态资源（Nginx 挂载目录，零停机实时生效）
+  deploy-frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend dist
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install sshpass
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+
+      - name: Upload dist to /opt/bagu/dist
+        env:
+          SSHPASS: ${{ secrets.SERVER_PASSWORD }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          tar czf - -C frontend/dist . | sshpass -e ssh \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=15 \
+            "$SERVER_USER@$SERVER_HOST" \
+            "mkdir -p /opt/bagu/dist && rm -rf /opt/bagu/dist/* && tar xzf - -C /opt/bagu/dist"
+
+  # 3. 构建并发布后端 Fat JAR（自动备份旧 jar 并重启 bagu-api + 启动探活）
+  deploy-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: "maven"
+
+      - name: Build backend Fat JAR
+        working-directory: backend
+        run: |
+          chmod +x mvnw
+          ./mvnw -B clean package -DskipTests
+
+      - name: Install sshpass
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+
+      - name: Upload app.jar & restart bagu-api
+        env:
+          SSHPASS: ${{ secrets.SERVER_PASSWORD }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          SSH_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=15"
+          sshpass -e scp $SSH_OPTS \
+            backend/target/bagu-backend-0.1.0-SNAPSHOT.jar \
+            "$SERVER_USER@$SERVER_HOST:/opt/bagu/app.jar.new"
+
+          sshpass -e ssh $SSH_OPTS "$SERVER_USER@$SERVER_HOST" '
+            set -e
+            cd /opt/bagu
+            if [ -f app.jar ]; then cp -f app.jar app.jar.bak; fi
+            mv -f app.jar.new app.jar
+            docker compose up -d bagu-api
+            docker compose restart bagu-api
+
+            echo "Waiting for bagu-api on port 8080..."
+            for i in $(seq 1 30); do
+              if docker exec bagu-api nc -z 127.0.0.1 8080 2>/dev/null; then
+                echo "bagu-api is UP!"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "ERROR: bagu-api failed to start within 60s"
+            docker logs --tail 50 bagu-api
+            exit 1
+          '
+
+  # 4. 同步部署配置（仅在 nginx.conf 或 docker-compose.yml 变动时执行）
+  deploy-config:
+    needs: changes
+    if: needs.changes.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+
+      - name: Sync nginx.conf & docker-compose.yml
+        env:
+          SSHPASS: ${{ secrets.SERVER_PASSWORD }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          SSH_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=15"
+          sshpass -e scp $SSH_OPTS \
+            deploy/nginx.conf deploy/docker-compose.yml \
+            "$SERVER_USER@$SERVER_HOST:/opt/bagu/"
+
+          sshpass -e ssh $SSH_OPTS "$SERVER_USER@$SERVER_HOST" '
+            set -e
+            cd /opt/bagu
+            docker compose up -d
+            docker exec bagu-web nginx -t
+            docker exec bagu-web nginx -s reload
+          '
