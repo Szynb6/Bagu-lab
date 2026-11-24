@@ -152,11 +152,11 @@ mark {
   margin-top: 0.9em;
 }
 .md h4 {
-  @apply mt-6 flex items-center gap-2 text-base font-semibold text-[var(--text-primary)];
+  @apply relative mt-6 pl-3 text-base leading-6 font-semibold text-[var(--text-primary)];
 }
 .md h4::before {
-  content: '§';
-  @apply font-mono text-sm font-bold text-[#C84B31] dark:text-[#E06246];
+  content: '';
+  @apply absolute left-0 top-1 h-4 w-[3px] rounded-full bg-[#2E6F5E] dark:bg-[#4FA58E];
 }
 .md .sub-point {
   @apply mt-5 font-semibold text-[var(--text-primary)];
