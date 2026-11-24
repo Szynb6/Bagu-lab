@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  ChevronDown, Clapperboard, Eye, EyeOff, Flame, List, NotebookPen, Play, RefreshCw, Star, TriangleAlert, X, Zap,
+  ArrowDown, ChevronDown, Clapperboard, Eye, EyeOff, Flame, List, NotebookPen, Play, RefreshCw, Star, TriangleAlert, X, Zap,
 } from 'lucide-vue-next'
 import { knowledgeApi, studyApi } from '@/api'
 import { useUiStore } from '@/stores/ui'
@@ -45,6 +45,20 @@ const groupedChapters = computed(() => {
       items: filteredQuestions.value.filter((q) => q.chapterId === ch.id),
     }))
     .filter((ch) => ch.items.length > 0)
+})
+
+const orderedQuestionMetaMap = computed(() => {
+  const flat = groupedChapters.value.flatMap((ch) => ch.items)
+  const total = flat.length
+  const map = new Map<number, { index: number; total: number; nextId: number | null }>()
+  flat.forEach((item, idx) => {
+    map.set(item.id, {
+      index: idx + 1,
+      total,
+      nextId: idx + 1 < total ? flat[idx + 1]!.id : null,
+    })
+  })
+  return map
 })
 
 let scrollRaf: number | null = null
@@ -319,7 +333,7 @@ async function onToggleStar(q: QuestionWithProgress) {
 
     <!-- 工程手稿连续正文 + 右侧吸顶目录 -->
     <div v-else-if="moduleMeta" class="flex items-start gap-7">
-      <div class="min-w-0 max-w-[820px] flex-1 space-y-6">
+      <div class="min-w-0 max-w-[820px] flex-1 space-y-9">
         <!-- 卷首导读卡 -->
         <section class="card p-5 sm:p-7">
           <div class="flex items-start gap-3.5">
@@ -340,114 +354,171 @@ async function onToggleStar(q: QuestionWithProgress) {
           </div>
         </section>
 
-        <!-- 按篇目分组的连续手稿纸面（无卡片嵌套） -->
-        <section v-for="ch in groupedChapters" :key="ch.id" class="space-y-3">
-          <div class="flex items-center justify-between border-b border-[var(--border-strong)] pb-2 pt-2">
-            <h2 class="text-base font-semibold text-[var(--text-primary)] sm:text-lg">{{ ch.title }}</h2>
-            <span class="font-mono text-xs tabular-nums text-[var(--text-muted)]">{{ ch.items.length }} 题</span>
+        <!-- 按篇目分组的独立手稿题卡 -->
+        <section v-for="ch in groupedChapters" :key="ch.id" class="space-y-4">
+          <div class="flex items-baseline justify-between gap-3 border-b border-[var(--border-strong)] pb-2.5 pt-1">
+            <h2 class="text-base font-semibold tracking-tight text-[var(--text-primary)] sm:text-lg">{{ ch.title }}</h2>
+            <span class="shrink-0 font-mono text-xs tabular-nums text-[var(--text-muted)]">{{ ch.items.length }} 题</span>
           </div>
 
-          <div class="card divide-y divide-[var(--border-default)] overflow-hidden">
+          <div :class="hideAnswers ? 'space-y-3.5' : 'space-y-6'">
             <article
               v-for="q in ch.items"
               :id="String(q.id)"
               :key="q.id"
               data-question-card
-              class="scroll-mt-32 p-5 sm:p-7"
+              class="scroll-mt-32 overflow-hidden rounded-2xl border bg-[var(--bg-surface)] transition-colors duration-150"
+              :class="activeId === q.id ? 'border-[var(--accent-border)]' : 'border-[var(--border-default)]'"
             >
-              <!-- 题头元信息 -->
-              <div class="flex items-start gap-3">
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="font-mono text-xs font-semibold text-[#C84B31] dark:text-[#E06246]">§ {{ q.code }}</span>
-                    <PriorityBadge :priority="q.priority" />
-                    <StatusDot :status="q.progress.status" />
+              <!-- 题头带（微底色 + 独立题号微徽章 + 加大题干，一眼锚定每道新题） -->
+              <header
+                class="border-b border-[var(--border-default)] px-5 py-4 transition-colors duration-150 sm:px-7 sm:py-5"
+                :class="activeId === q.id ? 'bg-[#FBF0ED]/55 dark:bg-[#231B18]' : 'bg-[var(--bg-subtle)]/75 dark:bg-[#201F1C]'"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span
+                        class="inline-flex items-center rounded-md border px-2 py-0.5 font-mono text-xs font-semibold transition-colors"
+                        :class="
+                          activeId === q.id
+                            ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#B53D24] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EC765C]'
+                            : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[#C84B31] dark:text-[#E06246]'
+                        "
+                      >
+                        § {{ q.code }}
+                      </span>
+                      <PriorityBadge :priority="q.priority" />
+                      <StatusDot :status="q.progress.status" />
+                    </div>
+                    <h3 class="mt-2.5 text-[17px] font-semibold leading-snug tracking-[-0.015em] text-[var(--text-primary)] sm:text-[19px]">
+                      {{ q.title }}
+                    </h3>
                   </div>
-                  <h3 class="mt-1.5 text-base font-semibold leading-snug text-[var(--text-primary)] sm:text-[17px]">
-                    {{ q.title }}
-                  </h3>
-                </div>
 
-                <div class="flex shrink-0 items-center gap-1">
-                  <RouterLink
-                    :to="{ name: 'study', query: { mode: 'single', id: q.id } }"
-                    class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-subtle)] hover:text-[#C84B31] dark:hover:text-[#E06246]"
-                    title="以闪卡背诵本题"
-                    aria-label="以闪卡背诵本题"
-                  >
-                    <Zap class="h-4 w-4" />
-                  </RouterLink>
-                  <button
-                    type="button"
-                    class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[var(--bg-subtle)]"
-                    :class="q.progress.isStarred ? 'text-amber-500' : 'text-[var(--text-muted)] hover:text-amber-500'"
-                    :title="q.progress.isStarred ? '取消收藏' : '收藏'"
-                    :aria-label="q.progress.isStarred ? '取消收藏本题' : '收藏本题'"
-                    @click="onToggleStar(q)"
-                  >
-                    <Star class="h-4 w-4" :class="q.progress.isStarred ? 'fill-current' : ''" />
-                  </button>
+                  <div class="flex shrink-0 items-center gap-1">
+                    <RouterLink
+                      :to="{ name: 'study', query: { mode: 'single', id: q.id } }"
+                      class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                      title="以闪卡背诵本题"
+                      aria-label="以闪卡背诵本题"
+                    >
+                      <Zap class="h-4 w-4" />
+                    </RouterLink>
+                    <button
+                      type="button"
+                      class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[var(--bg-surface)]"
+                      :class="q.progress.isStarred ? 'text-amber-500' : 'text-[var(--text-muted)] hover:text-amber-500'"
+                      :title="q.progress.isStarred ? '取消收藏' : '收藏'"
+                      :aria-label="q.progress.isStarred ? '取消收藏本题' : '收藏本题'"
+                      @click="onToggleStar(q)"
+                    >
+                      <Star class="h-4 w-4" :class="q.progress.isStarred ? 'fill-current' : ''" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </header>
 
               <!-- 答案正文区（支持自测折叠） -->
-              <div v-if="isAnswerShown(q.id)" class="mt-4">
-                <!-- 按需展开交互式原理推演（避免 18+ SVG 同时挂载阻塞页面） -->
-                <div v-if="q.animationKey" class="mb-5">
-                  <button
-                    type="button"
-                    class="flex w-full items-center justify-between rounded-lg border px-3.5 py-2.5 text-left text-xs font-medium transition-colors"
-                    :class="
-                      isAnimExpanded(q.id)
-                        ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
-                        : 'border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:border-[var(--border-strong)]'
-                    "
-                    :aria-expanded="isAnimExpanded(q.id)"
-                    @click="toggleAnim(q.id)"
-                  >
-                    <span class="inline-flex items-center gap-2">
-                      <Clapperboard class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" />
-                      <span>交互式原理推演</span>
-                    </span>
-                    <span class="font-mono text-[11px] text-[var(--text-muted)]">
-                      {{ isAnimExpanded(q.id) ? '收起动画 ▲' : '点击展开动画 ▼' }}
-                    </span>
-                  </button>
+              <div class="px-5 py-5 sm:px-7 sm:py-6">
+                <div v-if="isAnswerShown(q.id)">
+                  <!-- 按需展开交互式原理推演（避免 18+ SVG 同时挂载阻塞页面） -->
+                  <div v-if="q.animationKey" class="mb-5">
+                    <button
+                      type="button"
+                      class="flex w-full items-center justify-between rounded-lg border px-3.5 py-2.5 text-left text-xs font-medium transition-colors"
+                      :class="
+                        isAnimExpanded(q.id)
+                          ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
+                          : 'border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:border-[var(--border-strong)]'
+                      "
+                      :aria-expanded="isAnimExpanded(q.id)"
+                      @click="toggleAnim(q.id)"
+                    >
+                      <span class="inline-flex items-center gap-2">
+                        <Clapperboard class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" />
+                        <span>交互式原理推演</span>
+                      </span>
+                      <span class="font-mono text-[11px] text-[var(--text-muted)]">
+                        {{ isAnimExpanded(q.id) ? '收起动画 ▲' : '点击展开动画 ▼' }}
+                      </span>
+                    </button>
 
-                  <div v-if="isAnimExpanded(q.id)" class="mt-2.5">
-                    <QuestionAnimation :animation-key="q.animationKey" />
+                    <div v-if="isAnimExpanded(q.id)" class="mt-2.5">
+                      <QuestionAnimation :animation-key="q.animationKey" />
+                    </div>
+                  </div>
+
+                  <MarkdownView :source="q.answerMd" />
+
+                  <div
+                    v-if="q.progress.personalNote"
+                    class="mt-5 flex items-start gap-2 rounded-lg border border-[#EFC9BF] bg-[#FBF0ED]/65 px-3.5 py-2.5 text-xs leading-relaxed text-[var(--text-primary)] dark:border-[#572C22] dark:bg-[#2E1B16]/60"
+                  >
+                    <NotebookPen class="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#C84B31] dark:text-[#E06246]" />
+                    <span><strong>我的助记：</strong>{{ q.progress.personalNote }}</span>
                   </div>
                 </div>
 
-                <MarkdownView :source="q.answerMd" />
-
-                <div
-                  v-if="q.progress.personalNote"
-                  class="mt-5 flex items-start gap-2 rounded-lg border border-[#EFC9BF] bg-[#FBF0ED]/65 px-3.5 py-2.5 text-xs leading-relaxed text-[var(--text-primary)] dark:border-[#572C22] dark:bg-[#2E1B16]/60"
+                <button
+                  v-else
+                  type="button"
+                  class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)]/70 py-5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:border-[#C84B31]/50 hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                  @click="toggleAnswer(q.id)"
                 >
-                  <NotebookPen class="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#C84B31] dark:text-[#E06246]" />
-                  <span><strong>我的助记：</strong>{{ q.progress.personalNote }}</span>
-                </div>
-
-                <div v-if="hideAnswers" class="mt-4 text-right">
-                  <button
-                    type="button"
-                    class="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                    @click="toggleAnswer(q.id)"
-                  >
-                    收起答案
-                  </button>
-                </div>
+                  <Eye class="h-4 w-4" /> 点击展开参考答案自测
+                </button>
               </div>
 
-              <button
-                v-else
-                type="button"
-                class="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)]/70 py-5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:border-[#C84B31]/50 hover:text-[#C84B31] dark:hover:text-[#E06246]"
-                @click="toggleAnswer(q.id)"
+              <!-- 极简题尾收口条（仅在答案展开时展示，提供阅读收束感与顺手操作） -->
+              <footer
+                v-if="isAnswerShown(q.id)"
+                class="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-default)] bg-[var(--bg-subtle)]/45 px-5 py-2.5 text-xs dark:bg-[#161513] sm:px-7"
               >
-                <Eye class="h-4 w-4" /> 点击展开参考答案自测
-              </button>
+                <span class="font-mono text-[11.5px] tabular-nums text-[var(--text-muted)]">
+                  {{ q.code }} · {{ p0Only ? 'P0 精选' : '本篇进度' }} {{ orderedQuestionMetaMap.get(q.id)?.index ?? '-' }} / {{ orderedQuestionMetaMap.get(q.id)?.total ?? filteredQuestions.length }}
+                </span>
+
+                <div class="flex flex-wrap items-center gap-1">
+                  <button
+                    v-if="hideAnswers"
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-md py-1 pl-2 pr-2.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+                    @click="toggleAnswer(q.id)"
+                  >
+                    <EyeOff class="h-3.5 w-3.5" />
+                    <span>收起答案</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-md py-1 pl-2 pr-2.5 transition-colors hover:bg-[var(--bg-surface)]"
+                    :class="q.progress.isStarred ? 'text-amber-600 dark:text-amber-400' : 'text-[var(--text-secondary)] hover:text-amber-600 dark:hover:text-amber-400'"
+                    @click="onToggleStar(q)"
+                  >
+                    <Star class="h-3.5 w-3.5" :class="q.progress.isStarred ? 'fill-current' : ''" />
+                    <span>{{ q.progress.isStarred ? '已收藏' : '收藏' }}</span>
+                  </button>
+
+                  <RouterLink
+                    :to="{ name: 'study', query: { mode: 'single', id: q.id } }"
+                    class="inline-flex items-center gap-1 rounded-md py-1 pl-2 pr-2.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                  >
+                    <Zap class="h-3.5 w-3.5" />
+                    <span>刷本题闪卡</span>
+                  </RouterLink>
+
+                  <button
+                    v-if="orderedQuestionMetaMap.get(q.id)?.nextId != null"
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-md py-1 pl-2.5 pr-2 font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                    @click="scrollToQuestion(orderedQuestionMetaMap.get(q.id)!.nextId!)"
+                  >
+                    <span>下一题</span>
+                    <ArrowDown class="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </footer>
             </article>
           </div>
         </section>

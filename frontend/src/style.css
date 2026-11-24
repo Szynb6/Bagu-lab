@@ -151,6 +151,12 @@ mark {
 .md > * + * {
   margin-top: 0.9em;
 }
+.md > :first-child {
+  margin-top: 0;
+}
+.md > :last-child {
+  margin-bottom: 0;
+}
 .md h4 {
   @apply relative mt-6 pl-3 text-base leading-6 font-semibold text-[var(--text-primary)];
 }
@@ -360,7 +366,10 @@ mark {
   @apply flex items-center justify-between border-b border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-[var(--text-muted)];
 }
 .md .code-block .copy-btn {
-  @apply rounded px-2 py-0.5 normal-case tracking-normal text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)];
+  @apply cursor-pointer rounded px-2 py-0.5 normal-case tracking-normal text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)];
+}
+.md .code-block .copy-btn.is-copied {
+  @apply text-[#2E6F5E] dark:text-[#4FA58E];
 }
 .md pre {
   @apply overflow-x-auto px-4 py-3 font-mono text-[13px] leading-relaxed;
