@@ -1,18 +1,18 @@
 ﻿"""
-将 d:\\八股 下的 9 份 Word 面试笔记解析为结构化 JSON 题库（供前端预览 / 后续后端导入）。
+将 d:\\八股 下的 9 份双区 Word 面试笔记解析为结构化 JSON 题库（供生成 Flyway 迁移 SQL 或导入脚本使用）。
 
-输出：
-  frontend/public/data/modules.json              9 大模块元信息 + 篇目
-  frontend/public/data/questions/{slug}.json     单模块题目（Markdown 答案 + Hints + 图片）
-  frontend/public/images/{slug}/*.png            题目引用的原理图（后续将迁移至 RustFS bagu-images 桶）
-  scripts/parse_report.json                      解析统计报告
+输出（默认输出到 frontend/public，也可通过 --out-dir 指定临时目录）：
+  {out_dir}/data/modules.json              9 大模块元信息 + 篇目
+  {out_dir}/data/questions/{slug}.json     单模块题目（含 :::interview / :::pitfall / :::followup / :::explain-divider）
+  {out_dir}/images/{slug}/*.png            题目引用的原理图
+  scripts/parse_report.json                解析统计报告
 
-用法：python scripts/docx_to_json.py [源目录]
+用法：python scripts/docx_to_json.py [--src d:\八股] [--out-dir <dir>] [--no-report]
 """
+import argparse
 import json
 import re
 import shutil
-import sys
 import zipfile
 from pathlib import Path
 import xml.etree.ElementTree as ET
@@ -23,9 +23,6 @@ R = '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}'
 PR = '{http://schemas.openxmlformats.org/package/2006/relationships}'
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(r'd:\八股')
-OUT_DATA = ROOT / 'frontend' / 'public' / 'data'
-OUT_IMG = ROOT / 'frontend' / 'public' / 'images'
 
 MODULES = [
     ('01', '01-jvm', 'JVM', 'cpu'),
@@ -41,9 +38,6 @@ MODULES = [
 
 Q_RE = re.compile(r'^Q(\d+)\s*【\s*(P[012])[^】]*】\s*(.+)$')
 CH_RE = re.compile(r'^第[一二三四五六七八九十]+(?:篇|部分)\s*[：:]\s*(.+)$')
-DP_RE = re.compile(r'^(\d+)\.\s*(.+)$')
-CMP_RE = re.compile(r'^对比\s*\d+\s*[：:]\s*(.+)$')
-DP_P0 = ('单例', '工厂', '代理', '模板方法', '策略')
 CODE_FONTS = ('Consolas', 'Courier New', 'JetBrains Mono', 'Menlo', 'Monaco')
 
 
@@ -58,7 +52,9 @@ def pstyle(p):
 
 def run_is_code(r):
     rf = r.find(f'{W}rPr/{W}rFonts')
-    return rf is not None and (rf.get(W + 'ascii') or '') in CODE_FONTS
+    if rf is None:
+        return False
+    return (rf.get(W + 'ascii') or '') in CODE_FONTS or (rf.get(W + 'hAnsi') or '') in CODE_FONTS
 
 
 def run_is_bold(r):
@@ -111,22 +107,28 @@ def inline_md(p):
         elif kind == 'bold':
             s = txt.strip()
             lead = txt[: len(txt) - len(txt.lstrip())]
-            res.append(f'{lead}<strong>{s}</strong>')
+            trail = txt[len(txt.rstrip()):]
+            res.append(f'{lead}<strong>{s}</strong>{trail}')
         else:
             res.append(txt)
     return ''.join(res).strip()
 
 
 def guess_lang(code):
-    if code.lstrip().startswith('<'):
+    s = code.lstrip()
+    if s.startswith('<'):
         return 'xml'
-    head = code.strip()[:200].upper()
-    if re.search(r'\b(SELECT|INSERT|UPDATE|CREATE TABLE|ALTER|EXPLAIN)\b', head):
+    if 'redis.call' in code or re.search(r'\bif\b.*\bthen\b.*\bend\b', code, re.S):
+        return 'lua'
+    head = code.strip()[:250].upper()
+    if re.search(r'\b(SELECT|INSERT\s+INTO|UPDATE\s+\w+\s+SET|CREATE\s+TABLE|ALTER\s+TABLE|EXPLAIN|SHOW\s+)\b', head):
         return 'sql'
-    if re.search(r'^(SET|GET|HSET|ZADD|EXPIRE|SETNX|LPUSH|DEL)\s', head):
+    if re.search(r'^(SET|GET|HSET|ZADD|EXPIRE|SETNX|LPUSH|DEL|XADD|PFADD)\s', head, re.M):
         return 'bash'
-    if code.lstrip().startswith(('-X', 'java -', 'jstack', 'jmap', 'jstat', 'top', '$', '#!/')):
+    if s.startswith(('-X', 'java -', 'jstack', 'jmap', 'jstat', 'jcmd', 'top', 'vmstat', 'iostat', '$', '#!/', '# ')) and '{' not in code:
         return 'bash'
+    if re.match(r'^[a-z0-9_.-]+:\s*($|\n|[a-zA-Z0-9_-])', s) and ';' not in code and '{' not in code:
+        return 'yaml'
     return 'java'
 
 
@@ -136,36 +138,42 @@ def cell_text(tc):
     return s.replace('|', '\\|')
 
 
+def cell_fill(tc):
+    shd = tc.find(f'{W}tcPr/{W}shd')
+    if shd is None:
+        return ''
+    val = shd.get(W + 'fill') or ''
+    return '' if val in ('auto', 'FFFFFF') else val.upper()
+
+
 def table_md(tbl):
     rows = []
     for tr in tbl.findall(W + 'tr'):
         rows.append([cell_text(tc) for tc in tr.findall(W + 'tc')])
     if not rows:
-        return ''
+        return '', False
     if len(rows) == 1 and len(rows[0]) == 1 or all(len(r) == 1 for r in rows):
-        # 单列表格多用作提示框
         body = '<br>'.join(r[0] for r in rows if r and r[0])
-        return '> ' + body if body else ''
+        return ('> ' + body if body else ''), False
     width = max(len(r) for r in rows)
     rows = [r + [''] * (width - len(r)) for r in rows]
     md = ['| ' + ' | '.join(rows[0]) + ' |', '|' + '---|' * width]
     md += ['| ' + ' | '.join(r) + ' |' for r in rows[1:]]
-    return '\n'.join(md)
+    return '\n'.join(md), True
 
 
 class ModuleParser:
-    def __init__(self, path, slug, title, icon, order):
+    def __init__(self, path, slug, title, icon, order, out_img: Path):
         self.path, self.slug, self.title, self.icon, self.order = path, slug, title, icon, order
         self.z = zipfile.ZipFile(path)
         self.rels = self._load_rels()
-        self.img_dir = OUT_IMG / slug
+        self.img_dir = out_img / slug
         self.img_count = 0
         self.chapters, self.questions = [], []
         self.cur_q = None
         self.cur_ch = None
         self.desc = ''
         self.guide = ''
-        self.is_dp = slug == '07-design-patterns'
 
     def _load_rels(self):
         root = ET.fromstring(self.z.read('word/_rels/document.xml.rels'))
@@ -195,7 +203,7 @@ class ModuleParser:
 
     def new_question(self, code, priority, title):
         if self.cur_ch is None:
-            self.new_chapter('综合')
+            self.new_chapter('第一篇：核心考点')
         qid = f'{self.slug}-{code.lower()}'
         self.cur_q = {
             'id': qid, 'moduleSlug': self.slug, 'chapterId': self.cur_ch['id'], 'code': code,
@@ -208,6 +216,79 @@ class ModuleParser:
     def add(self, md):
         if self.cur_q is not None and md:
             self.cur_q['blocks'].append(md)
+
+    def handle_single_cell_box(self, tbl):
+        tc = tbl.find(f'{W}tr/{W}tc')
+        if tc is None:
+            return False
+        fill = cell_fill(tc)
+        paras = [p for p in tc.findall(W + 'p')]
+        first_txt = ptext(paras[0]) if paras else ''
+
+        # 卷首单格框：提取简介或考前冲刺指南
+        if self.cur_ch is None:
+            texts = [ptext(p) for p in paras if ptext(p)]
+            if fill == '1B365D' and len(texts) >= 2 and not self.desc:
+                self.desc = texts[1]
+            elif (fill == 'F1F5F9' or first_txt.startswith('考前复习指南：')) and texts:
+                guide_txt = '\n'.join(texts)
+                guide_txt = re.sub(r'^考前复习指南[：:]\s*', '', guide_txt)
+                self.guide = guide_txt
+            return True
+
+        if self.cur_q is None:
+            return True
+
+        # 1. 青绿卡片：【面试标准回答】
+        if fill == 'F0F7F4' or first_txt.startswith('【面试标准回答】'):
+            lines = []
+            for p in paras:
+                pt = ptext(p)
+                if not pt or pt.startswith('【面试标准回答】'):
+                    continue
+                md = inline_md(p)
+                # 将 "<strong>1. 关键词：</strong>说明" 转为有序列表 "1. <strong>关键词：</strong>说明"
+                m_pt = re.match(r'^<strong>(\d+)\.\s*([^<]+?)</strong>(.*)$', md)
+                if m_pt:
+                    num, lead, rest = m_pt.group(1), m_pt.group(2).strip(), m_pt.group(3).lstrip()
+                    hint_key = lead.rstrip('：:')
+                    if 1 < len(hint_key) <= 30:
+                        self.cur_q.setdefault('_ia_hints', []).append(hint_key)
+                    lines.append(f'{num}. <strong>{lead}</strong> {rest}'.rstrip())
+                else:
+                    if lines:
+                        lines.append('')
+                    lines.append(md)
+                    if pt.startswith('核心结论'):
+                        lines.append('')
+            if lines:
+                self.add(':::interview\n' + '\n'.join(lines) + '\n:::')
+            return True
+
+        # 2. 琥珀卡片：避坑提醒
+        if fill == 'FFFBEB' or first_txt.startswith('避坑提醒：'):
+            body = '\n\n'.join(inline_md(p) for p in paras if ptext(p))
+            if body:
+                self.add(':::pitfall\n' + body + '\n:::')
+            return True
+
+        # 3. 蓝色卡片：高频追问
+        if fill == 'EFF6FF' or first_txt.startswith('高频追问：'):
+            body = '\n\n'.join(inline_md(p) for p in paras if ptext(p))
+            if body:
+                self.add(':::followup\n' + body + '\n:::')
+            return True
+
+        # 4. 灰底代码块
+        if fill == 'F8FAFC':
+            raw_code = '\n'.join(code_text(p) for p in paras).rstrip()
+            if raw_code.strip():
+                lang = guess_lang(raw_code)
+                self.add(f'```{lang}\n{raw_code}\n```')
+                self.cur_q['hasCode'] = True
+            return True
+
+        return False
 
     def parse(self):
         body = ET.fromstring(self.z.read('word/document.xml')).find(W + 'body')
@@ -225,11 +306,15 @@ class ModuleParser:
             tag = el.tag.replace(W, '')
             if tag == 'tbl':
                 flush_code()
+                rows = el.findall(W + 'tr')
+                is_single_box = len(rows) == 1 and len(rows[0].findall(W + 'tc')) == 1
+                if is_single_box and self.handle_single_cell_box(el):
+                    continue
                 if self.cur_q is not None:
-                    md = table_md(el)
+                    md, is_real_table = table_md(el)
                     if md:
                         self.add(md)
-                        if not md.startswith('>'):
+                        if is_real_table:
                             self.cur_q['hasTable'] = True
                 continue
             if tag != 'p':
@@ -264,25 +349,17 @@ class ModuleParser:
                 continue
 
             m_q = Q_RE.match(text)
-            if m_q and not self.is_dp:
+            if m_q:
                 self.new_question(f'Q{int(m_q.group(1)):02d}', m_q.group(2), m_q.group(3))
                 continue
 
-            if self.is_dp:
-                m_dp = DP_RE.match(text)
-                m_cmp = CMP_RE.match(text)
-                if style == '4' and m_dp:
-                    name = m_dp.group(2)
-                    pri = 'P0' if any(k in name for k in DP_P0) else 'P1'
-                    self.new_question(f'DP{int(m_dp.group(1)):02d}', pri, f'{name}：核心思想、实现方式与框架应用？')
-                    continue
-                if style == '5' and m_cmp:
-                    n = len([q for q in self.questions if q['code'].startswith('CMP')]) + 1
-                    self.new_question(f'CMP{n:02d}', 'P1', f'{m_cmp.group(1)}：有什么区别？')
-                    continue
-
             if self.cur_q is None:
                 intro_paras.append(text)
+                continue
+
+            # 原理详细讲解分隔标识
+            if text == '【原理详细讲解】':
+                self.add(':::explain-divider')
                 continue
 
             # 图注
@@ -295,9 +372,10 @@ class ModuleParser:
                 continue
 
             md = inline_md(el) or text
-            if style is not None:
+            if style is not None and style not in ('Normal', 'a'):
+                clean_h = re.sub(r'^\d+\.\s+', '', text).strip()
                 self.add(f'#### {text}')
-                self.cur_q['_subs'] = self.cur_q.get('_subs', []) + [text]
+                self.cur_q['_subs'] = self.cur_q.get('_subs', []) + [clean_h]
             elif text.startswith('▸'):
                 self.add(f'<p class="sub-point">{text.lstrip("▸ ").strip()}</p>')
                 self.cur_q['_subs'] = self.cur_q.get('_subs', []) + [text.lstrip('▸ ').strip()]
@@ -310,13 +388,16 @@ class ModuleParser:
         flush_code()
 
         if intro_paras:
-            self.desc = intro_paras[1] if len(intro_paras) > 1 else intro_paras[0]
-            self.guide = next((p for p in intro_paras if '冲刺' in p or '速查' in p), '')
+            if not self.desc:
+                self.desc = intro_paras[1] if len(intro_paras) > 1 else intro_paras[0]
+            if not self.guide:
+                self.guide = next((p for p in intro_paras if '冲刺' in p or '速查' in p), '')
         self.chapters = [c for c in self.chapters if c['questionIds']]
         for i, q in enumerate(self.questions):
             q['order'] = i + 1
             q['hints'] = self.make_hints(q)
             q.pop('_subs', None)
+            q.pop('_ia_hints', None)
             q['answerMd'] = self.join_blocks(q.pop('blocks'))
 
     @staticmethod
@@ -331,16 +412,20 @@ class ModuleParser:
 
     @staticmethod
     def make_hints(q):
-        subs = [s.rstrip('：:') for s in q.get('_subs', []) if 1 < len(s) < 40]
         hints = []
-        for s in subs:
-            if s not in hints:
-                hints.append(s)
+        for h in q.get('_ia_hints', []):
+            if h not in hints:
+                hints.append(h)
+        if len(hints) < 3:
+            for s in q.get('_subs', []):
+                s = s.rstrip('：:')
+                if 1 < len(s) < 40 and s not in hints:
+                    hints.append(s)
         if len(hints) < 2:
             for b in q['blocks']:
                 if b.startswith('- '):
-                    t = re.sub(r'[*`]', '', b[2:]).strip()
-                    t = re.split(r'[：:，,。]', t)[0]
+                    t = re.sub(r'</?strong>|[`*]', '', b[2:]).strip()
+                    t = re.split(r'[：:，,。]', t)[0].strip()
                     if 1 < len(t) <= 30 and t not in hints:
                         hints.append(t)
                 if len(hints) >= 4:
@@ -348,20 +433,23 @@ class ModuleParser:
         return hints[:5]
 
 
-def main():
-    if OUT_DATA.exists():
-        shutil.rmtree(OUT_DATA)
-    if OUT_IMG.exists():
-        shutil.rmtree(OUT_IMG)
-    (OUT_DATA / 'questions').mkdir(parents=True)
-    files = {p.name[:2]: p for p in SRC.glob('*.docx') if not p.name.startswith('~$')}
+def parse_all(src: Path, out_dir: Path, write_report: bool = True):
+    out_data = out_dir / 'data'
+    out_img = out_dir / 'images'
+    if out_data.exists():
+        shutil.rmtree(out_data)
+    if out_img.exists():
+        shutil.rmtree(out_img)
+    (out_data / 'questions').mkdir(parents=True)
+
+    files = {p.name[:2]: p for p in src.glob('*.docx') if not p.name.startswith('~$')}
     modules, report = [], []
     for order, (prefix, slug, title, icon) in enumerate(MODULES, 1):
         path = files.get(prefix)
         if not path:
             print(f'[WARN] 未找到 {prefix} 开头的笔记')
             continue
-        mp = ModuleParser(path, slug, title, icon, order)
+        mp = ModuleParser(path, slug, title, icon, order, out_img)
         mp.parse()
         qs = mp.questions
         cnt = {p: sum(1 for q in qs if q['priority'] == p) for p in ('P0', 'P1', 'P2')}
@@ -372,14 +460,27 @@ def main():
             'imageCount': sum(len(q['images']) for q in qs),
             'chapters': [{'id': c['id'], 'title': c['title'], 'questionCount': len(c['questionIds'])} for c in mp.chapters],
         })
-        (OUT_DATA / 'questions' / f'{slug}.json').write_text(json.dumps(qs, ensure_ascii=False), encoding='utf-8')
+        (out_data / 'questions' / f'{slug}.json').write_text(json.dumps(qs, ensure_ascii=False), encoding='utf-8')
         report.append({'slug': slug, 'questions': len(qs), **cnt, 'images': mp.img_count, 'chapters': len(mp.chapters)})
         print(f'{slug:22s} 题目 {len(qs):3d}  P0 {cnt["P0"]:3d}  P1 {cnt["P1"]:3d}  P2 {cnt["P2"]:3d}  图片 {mp.img_count:3d}  篇目 {len(mp.chapters)}')
-    (OUT_DATA / 'modules.json').write_text(json.dumps(modules, ensure_ascii=False, indent=2), encoding='utf-8')
-    (ROOT / 'scripts' / 'parse_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+    (out_data / 'modules.json').write_text(json.dumps(modules, ensure_ascii=False, indent=2), encoding='utf-8')
+    if write_report:
+        (ROOT / 'scripts' / 'parse_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     print('合计题目', sum(r['questions'] for r in report), '图片', sum(r['images'] for r in report))
+    return modules, report
+
+
+def main():
+    ap = argparse.ArgumentParser(description='解析 d:\\八股 9 份 Word 笔记为 JSON')
+    ap.add_argument('pos_src', nargs='?', default=r'd:\八股', help='源 Word 目录（位置参数兼容旧用法）')
+    ap.add_argument('--src', default=None, help='源 Word 目录')
+    ap.add_argument('--out-dir', default=str(ROOT / 'frontend' / 'public'), help='输出根目录（含 data/ 与 images/）')
+    ap.add_argument('--no-report', action='store_true', help='不覆盖 scripts/parse_report.json')
+    args = ap.parse_args()
+    src = Path(args.src or args.pos_src)
+    out_dir = Path(args.out_dir)
+    parse_all(src, out_dir, write_report=not args.no_report)
 
 
 if __name__ == '__main__':
     main()
-

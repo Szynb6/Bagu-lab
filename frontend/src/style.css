@@ -181,6 +181,155 @@ mark {
 .md blockquote {
   @apply my-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-4 py-3 text-[14.5px] text-[var(--text-secondary)];
 }
+
+/* ---------------------------------------------------------------- */
+/* 双区结构与语义彩色卡片（面试标准回答 / 原理详细讲解 / 避坑 / 追问） */
+/* ---------------------------------------------------------------- */
+.md .callout {
+  @apply my-4 rounded-lg border px-4 py-3.5 text-[14.5px] leading-[1.76];
+}
+.md .callout-body > * + * {
+  margin-top: 0.55em;
+}
+.md .callout-body ol {
+  @apply my-2 list-decimal space-y-1.5 pl-5;
+}
+.md .callout-body ul {
+  @apply my-2 list-disc space-y-1.5 pl-5;
+}
+
+/* 1. 面试标准回答（鼠尾草青绿卡片） */
+.md .callout-interview {
+  border-color: #C4DFD4;
+  border-left-width: 3.5px;
+  border-left-color: #2E6F5E;
+  background-color: #F0F7F4;
+  color: #1E293B;
+}
+.dark .md .callout-interview {
+  border-color: #23493D;
+  border-left-color: #4FA58E;
+  background-color: #132620;
+  color: #DCE7E2;
+}
+.md .callout-interview .callout-head {
+  @apply mb-2 flex flex-wrap items-baseline gap-2 border-b pb-1.5;
+  border-color: #D2E8DF;
+}
+.dark .md .callout-interview .callout-head {
+  border-color: #214539;
+}
+.md .callout-interview .callout-title {
+  @apply text-[13px] font-semibold tracking-wide;
+  color: #155746;
+}
+.dark .md .callout-interview .callout-title {
+  color: #86CBB7;
+}
+.md .callout-interview .callout-sub {
+  @apply text-[11.5px];
+  color: #4A7C6F;
+}
+.dark .md .callout-interview .callout-sub {
+  color: #6BA897;
+}
+.md .callout-interview .callout-body strong {
+  color: #155746;
+}
+.dark .md .callout-interview .callout-body strong {
+  color: #86CBB7;
+}
+.md .callout-interview .callout-body ol > li::marker {
+  color: #155746;
+  font-weight: 600;
+}
+.dark .md .callout-interview .callout-body ol > li::marker {
+  color: #86CBB7;
+}
+.md .callout-interview :not(pre) > code {
+  border-color: #C4DFD4;
+  background-color: rgb(255 255 255 / 0.72);
+  color: #96311D;
+}
+.dark .md .callout-interview :not(pre) > code {
+  border-color: #2A5446;
+  background-color: #0D1B17;
+  color: #EFC0B3;
+}
+
+/* 2. 原理详细讲解分区头 */
+.md .explain-divider {
+  @apply mt-6 mb-3 flex items-center gap-3;
+}
+.md .explain-divider span {
+  @apply shrink-0 rounded border border-[var(--border-default)] bg-[var(--bg-subtle)] px-2.5 py-0.5 text-xs font-semibold tracking-wide text-[var(--text-primary)];
+}
+.md .explain-divider::after {
+  content: '';
+  @apply h-px flex-1 bg-[var(--border-default)];
+}
+
+/* 3. 避坑提醒（暖琥珀卡片） */
+.md .callout-pitfall {
+  border-color: #FDE68A;
+  border-left-width: 3.5px;
+  border-left-color: #D97706;
+  background-color: #FFFBEB;
+  color: #292524;
+}
+.dark .md .callout-pitfall {
+  border-color: #593D16;
+  border-left-color: #E09A3E;
+  background-color: #281E10;
+  color: #EAE2D3;
+}
+.md .callout-pitfall .callout-body > p:first-child > strong:first-child {
+  color: #B45309;
+}
+.dark .md .callout-pitfall .callout-body > p:first-child > strong:first-child {
+  color: #F6C478;
+}
+.md .callout-pitfall :not(pre) > code {
+  border-color: #F3D999;
+  background-color: rgb(255 255 255 / 0.72);
+  color: #96311D;
+}
+.dark .md .callout-pitfall :not(pre) > code {
+  border-color: #5A401B;
+  background-color: #1C150B;
+  color: #F6C478;
+}
+
+/* 4. 高频追问（靛蓝卡片） */
+.md .callout-followup {
+  border-color: #BFDBFE;
+  border-left-width: 3.5px;
+  border-left-color: #2563EB;
+  background-color: #EFF6FF;
+  color: #1E293B;
+}
+.dark .md .callout-followup {
+  border-color: #253E63;
+  border-left-color: #60A5FA;
+  background-color: #142135;
+  color: #D9E4F2;
+}
+.md .callout-followup .callout-body > p:first-child > strong:first-child {
+  color: #1D4ED8;
+}
+.dark .md .callout-followup .callout-body > p:first-child > strong:first-child {
+  color: #93C5FD;
+}
+.md .callout-followup :not(pre) > code {
+  border-color: #BFDBFE;
+  background-color: rgb(255 255 255 / 0.72);
+  color: #1E40AF;
+}
+.dark .md .callout-followup :not(pre) > code {
+  border-color: #2A4670;
+  background-color: #0E1828;
+  color: #93C5FD;
+}
 .md img {
   @apply mx-auto max-h-[440px] cursor-zoom-in rounded-lg border border-[var(--border-default)] bg-white object-contain transition-[border-color,opacity] duration-150 hover:border-[var(--border-strong)] dark:bg-[#E8E4DA];
 }
