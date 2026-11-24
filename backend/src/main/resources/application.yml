@@ -31,6 +31,7 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     encoding: UTF-8
+    placeholder-replacement: false   # 禁用 ${...} 占位符替换，避免迁移 SQL 题库正文中 ${} / @Value("${...}") 被 Flyway 误解析
 
   # Redis 7.4（方案 A：独立 database=2）
   data:
