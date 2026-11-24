@@ -118,6 +118,8 @@ def inline_md(p):
 
 
 def guess_lang(code):
+    if code.lstrip().startswith('<'):
+        return 'xml'
     head = code.strip()[:200].upper()
     if re.search(r'\b(SELECT|INSERT|UPDATE|CREATE TABLE|ALTER|EXPLAIN)\b', head):
         return 'sql'
@@ -125,8 +127,6 @@ def guess_lang(code):
         return 'bash'
     if code.lstrip().startswith(('-X', 'java -', 'jstack', 'jmap', 'jstat', 'top', '$', '#!/')):
         return 'bash'
-    if code.lstrip().startswith('<'):
-        return 'xml'
     return 'java'
 
 
