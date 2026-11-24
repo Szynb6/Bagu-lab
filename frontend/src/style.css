@@ -217,6 +217,17 @@ mark {
   @apply overflow-x-auto px-4 py-3 font-mono text-[13px] leading-relaxed;
 }
 
+/* 文本流程示意图（区别于编程语言代码块，无 JAVA/复制 栏与误高亮） */
+.md .diagram-block {
+  @apply relative overflow-hidden rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)]/70;
+}
+.md .diagram-block .diagram-head {
+  @apply flex items-center border-b border-[var(--border-default)] px-3 py-1 text-[11px] font-medium text-[var(--text-muted)];
+}
+.md .diagram-block pre {
+  @apply overflow-x-auto px-4 py-3 font-mono text-[13px] leading-[1.55] text-[var(--text-primary)];
+}
+
 /* highlight.js 浅色 / 深色 token（保证 >= 4.5:1 对比度） */
 .hljs-keyword, .hljs-selector-tag, .hljs-built_in { color: #96311d; }
 .hljs-string, .hljs-attr-value, .hljs-regexp { color: #225c4e; }
