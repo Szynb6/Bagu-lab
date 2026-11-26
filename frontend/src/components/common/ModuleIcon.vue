@@ -37,7 +37,7 @@ const comp = computed(() => icons[props.icon as keyof typeof icons] ?? BookOpen)
     class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border font-mono text-xs font-semibold tracking-tight transition-colors"
     :class="
       active
-        ? 'border-[#C84B31]/40 bg-[#FBF0ED] text-[#96311D] dark:border-[#E06246]/40 dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
+        ? 'border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent-fg)]'
         : 'border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-primary)]'
     "
   >

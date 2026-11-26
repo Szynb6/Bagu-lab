@@ -2,12 +2,13 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  BookMarked, BookOpen, CheckCircle2, ChevronsLeft, ChevronsRight, Home, Layers, Loader2, LogOut, Mail, Moon,
-  Star, Sun, Trash2, TriangleAlert, User, X, Zap,
+  BookMarked, BookOpen, CheckCircle2, ChevronsLeft, ChevronsRight, Home, Layers, Loader2, LogOut, Mail,
+  Star, Trash2, TriangleAlert, User, X, Zap,
 } from 'lucide-vue-next'
 import { authApi } from '@/api'
 import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
+import ThemeSwitcher from '@/components/common/ThemeSwitcher.vue'
 
 const ui = useUiStore()
 const auth = useAuthStore()
@@ -146,7 +147,7 @@ async function confirmDeleteAccount() {
   <div class="min-h-dvh lg:flex">
     <a
       href="#main-content"
-      class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-[#C84B31] focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-[var(--accent-btn-bg)] focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
     >
       跳转到主内容
     </a>
@@ -164,15 +165,15 @@ async function confirmDeleteAccount() {
         </div>
       </div>
 
-      <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-3" aria-label="主导航">
+      <nav class="flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-3" aria-label="主导航">
         <RouterLink
           v-for="item in nav"
           :key="item.name"
           :to="item.to"
-          class="flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500"
+          class="flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--accent)]"
           :class="
             item.active
-              ? 'border-[var(--border-strong)] bg-[var(--bg-surface)] font-semibold text-[#C84B31] dark:text-[#E06246]'
+              ? 'border-[var(--border-strong)] bg-[var(--bg-surface)] font-semibold text-[var(--accent)]'
               : 'border-transparent font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)]'
           "
           :title="item.name"
@@ -187,10 +188,10 @@ async function confirmDeleteAccount() {
             v-for="m in ui.modules"
             :key="m.slug"
             :to="{ name: 'reader', params: { slug: m.slug } }"
-            class="flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500"
+            class="flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--accent)]"
             :class="
               route.params.slug === m.slug
-                ? 'border-[var(--border-default)] bg-[var(--bg-surface)] font-medium text-[#C84B31] dark:text-[#E06246]'
+                ? 'border-[var(--border-default)] bg-[var(--bg-surface)] font-medium text-[var(--accent)]'
                 : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]'
             "
           >
@@ -220,33 +221,26 @@ async function confirmDeleteAccount() {
         <img src="/favicon.svg" class="h-7 w-7 lg:hidden" alt="Bagu Lab" />
         <h1 class="text-[15px] font-semibold tracking-tight text-[var(--text-primary)] lg:text-base">{{ route.meta.title }}</h1>
 
-        <button
-          type="button"
-          class="ml-auto flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-[var(--text-secondary)] transition-colors hover:border-[var(--border-default)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-brand-500"
-          :title="ui.dark ? '切换浅色纸面' : '切换深色石墨'"
-          :aria-label="ui.dark ? '切换浅色模式' : '切换深色模式'"
-          @click="ui.toggleTheme()"
-        >
-          <component :is="ui.dark ? Sun : Moon" class="h-[18px] w-[18px]" />
-        </button>
+        <div class="ml-auto flex items-center gap-2">
+          <ThemeSwitcher />
 
-        <div class="relative">
-          <button
-            type="button"
-            class="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] font-mono text-sm font-semibold text-[#C84B31] transition-colors hover:border-[#C84B31] focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-[#E06246]"
-            aria-label="账号与笔记菜单"
-            :aria-expanded="menuOpen"
-            @click="menuOpen = !menuOpen"
-          >
-            {{ (auth.user?.username || auth.user?.nickname)?.slice(0, 1).toUpperCase() ?? 'U' }}
-          </button>
+          <div class="relative">
+            <button
+              type="button"
+              class="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] font-mono text-sm font-semibold text-[var(--accent)] transition-colors hover:border-[var(--accent)] focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+              aria-label="账号与笔记菜单"
+              :aria-expanded="menuOpen"
+              @click="menuOpen = !menuOpen"
+            >
+              {{ (auth.user?.username || auth.user?.nickname)?.slice(0, 1).toUpperCase() ?? 'U' }}
+            </button>
 
-          <Transition name="fade">
-            <div v-if="menuOpen" class="fixed inset-0 z-40" @click="menuOpen = false" />
-          </Transition>
+            <Transition name="fade">
+              <div v-if="menuOpen" class="fixed inset-0 z-40" @click="menuOpen = false" />
+            </Transition>
 
-          <Transition name="slide-up">
-            <div v-if="menuOpen" class="card absolute right-0 z-50 mt-2 w-60 p-2 text-sm shadow-sm">
+            <Transition name="slide-up">
+              <div v-if="menuOpen" class="popover-surface absolute right-0 z-50 mt-2 w-60 rounded-2xl p-2 text-sm">
               <div class="px-3 py-2">
                 <div class="flex items-center gap-2">
                   <User class="h-4 w-4 text-[var(--text-muted)]" />
@@ -282,6 +276,7 @@ async function confirmDeleteAccount() {
               </button>
             </div>
           </Transition>
+          </div>
         </div>
       </header>
 
@@ -301,11 +296,11 @@ async function confirmDeleteAccount() {
           :key="t.name"
           :to="t.to"
           class="flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors"
-          :class="t.active ? 'text-[#C84B31] dark:text-[#E06246]' : 'text-[var(--text-muted)]'"
+          :class="t.active ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'"
         >
           <span
             v-if="t.primary"
-            class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#C84B31] text-white"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-btn-bg)] text-white"
           >
             <component :is="t.icon" class="h-4 w-4" />
           </span>
@@ -325,7 +320,7 @@ async function confirmDeleteAccount() {
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-xs"
         @click.self="!deleteSubmitting && (deleteModalOpen = false)"
       >
-        <form class="card w-full max-w-md overflow-hidden" @submit.prevent="confirmDeleteAccount">
+        <form class="popover-surface w-full max-w-md overflow-hidden rounded-2xl" @submit.prevent="confirmDeleteAccount">
           <div class="flex items-center justify-between border-b border-[var(--border-default)] bg-[var(--bg-subtle)] px-5 py-3.5">
             <div class="flex items-center gap-2">
               <TriangleAlert class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" />
@@ -370,7 +365,7 @@ async function confirmDeleteAccount() {
                   inputmode="numeric"
                   maxlength="6"
                   autocomplete="one-time-code"
-                  class="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 font-mono text-sm tracking-widest text-[var(--text-primary)] outline-none transition-colors placeholder:font-sans placeholder:tracking-normal placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+                  class="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 font-mono text-sm tracking-widest text-[var(--text-primary)] outline-none transition-colors placeholder:font-sans placeholder:tracking-normal placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                   placeholder="6 位数字验证码"
                 />
                 <button
@@ -380,7 +375,7 @@ async function confirmDeleteAccount() {
                   @click="onSendDeleteCode"
                 >
                   <Loader2 v-if="deleteSending" class="h-3.5 w-3.5 animate-spin" />
-                  <Mail v-else class="h-3.5 w-3.5 text-[#C84B31] dark:text-[#E06246]" />
+                  <Mail v-else class="h-3.5 w-3.5 text-[var(--accent)]" />
                   <span class="font-mono tabular-nums">
                     {{ deleteCooldown > 0 ? `${deleteCooldown}s 后重发` : '获取验证码' }}
                   </span>

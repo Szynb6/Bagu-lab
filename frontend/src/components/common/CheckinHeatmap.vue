@@ -45,11 +45,11 @@ const summaryLabel = computed(() => {
 })
 
 function level(c: number) {
-  if (c <= 0) return 'bg-[#ECE9E0] dark:bg-[#24231F]'
-  if (c < 10) return 'bg-[#F6DDD6] dark:bg-[#4A251D]'
-  if (c < 20) return 'bg-[#E59A86] dark:bg-[#7B3424]'
-  if (c < 30) return 'bg-[#C84B31] dark:bg-[#B53D24]'
-  return 'bg-[#96311D] dark:bg-[#E06246]'
+  if (c <= 0) return 'bg-[var(--heat-0)]'
+  if (c < 10) return 'bg-[var(--heat-1)]'
+  if (c < 20) return 'bg-[var(--heat-2)]'
+  if (c < 30) return 'bg-[var(--heat-3)]'
+  return 'bg-[var(--heat-4)]'
 }
 </script>
 

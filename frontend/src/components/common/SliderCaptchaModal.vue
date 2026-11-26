@@ -122,11 +122,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-xs"
       @click.self="emit('close')"
     >
-      <div class="card w-full max-w-[350px] p-4 shadow-lg">
+      <div class="popover-surface w-full max-w-[350px] rounded-2xl p-4">
         <!-- 顶栏 -->
         <div class="mb-3 flex items-center justify-between">
           <div class="flex items-center gap-1.5">
-            <ShieldCheck class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" />
+            <ShieldCheck class="h-4 w-4 text-[var(--accent)]" />
             <h3 id="slider-captcha-title" class="text-sm font-semibold text-[var(--text-primary)]">
               拖动滑块完成拼图验证
             </h3>
@@ -157,7 +157,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <!-- 拼图画布 (310 x 150) -->
         <div class="relative mx-auto h-[150px] w-[310px] overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] select-none">
           <div v-if="loading || !captcha" class="flex h-full w-full items-center justify-center gap-2 text-xs text-[var(--text-muted)]">
-            <Loader2 class="h-4 w-4 animate-spin text-[#C84B31]" /> 生成工程图纸中...
+            <Loader2 class="h-4 w-4 animate-spin text-[var(--accent)]" /> 生成工程图纸中...
           </div>
           <template v-else>
             <img
@@ -207,7 +207,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                 ? 'bg-[#EBF4F1] dark:bg-[#162923]'
                 : status === 'fail'
                   ? 'bg-[#FBF0ED] dark:bg-[#2E1B16]'
-                  : 'bg-[#FBF0ED]/80 dark:bg-[#2E1B16]/70'
+                  : 'bg-[var(--accent-soft)]'
             "
             :style="{ width: `${dragX + 22}px` }"
           />
@@ -223,13 +223,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           <button
             type="button"
             aria-label="按住并向右拖动滑块完成拼图"
-            class="absolute top-0.5 flex h-[34px] w-[44px] touch-none items-center justify-center rounded-md border transition-colors focus-visible:outline-2 focus-visible:outline-brand-500"
+            class="absolute top-0.5 flex h-[34px] w-[44px] touch-none items-center justify-center rounded-md border transition-colors focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
             :class="
               status === 'success'
                 ? 'border-[#2E6F5E] bg-[#2E6F5E] text-white'
                 : status === 'fail'
                   ? 'border-[#C84B31] bg-[#C84B31] text-white'
-                  : 'cursor-grab border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:border-[#C84B31] active:cursor-grabbing'
+                  : 'cursor-grab border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:border-[var(--accent)] active:cursor-grabbing'
             "
             :style="{ transform: `translateX(${dragX + 2}px)` }"
             @pointerdown="onPointerDown"
@@ -239,7 +239,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           >
             <Check v-if="status === 'success'" class="h-4 w-4" />
             <X v-else-if="status === 'fail'" class="h-4 w-4" />
-            <ArrowRight v-else class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" />
+            <ArrowRight v-else class="h-4 w-4 text-[var(--accent)]" />
           </button>
         </div>
       </div>

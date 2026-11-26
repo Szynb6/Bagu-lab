@@ -244,7 +244,7 @@ async function onToggleStar(q: QuestionWithProgress) {
           <select
             :value="currentSlug"
             aria-label="选择知识模块"
-            class="h-9 appearance-none rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] pl-3 pr-8 text-sm font-medium text-[var(--text-primary)] outline-none transition-colors focus:border-[#C84B31]"
+            class="h-9 appearance-none rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] pl-3 pr-8 text-sm font-medium text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--accent)]"
             @change="switchModule"
           >
             <option v-for="m in ui.modules" :key="m.slug" :value="m.slug">
@@ -274,7 +274,7 @@ async function onToggleStar(q: QuestionWithProgress) {
           class="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors"
           :class="
             hideAnswers
-              ? 'border-[#C84B31] bg-[#C84B31] text-white'
+              ? 'border-[var(--accent-btn-bg)] bg-[var(--accent-btn-bg)] text-white'
               : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
           "
           @click="hideAnswers = !hideAnswers; revealedIds = new Set()"
@@ -288,7 +288,7 @@ async function onToggleStar(q: QuestionWithProgress) {
           class="hidden h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors sm:inline-flex"
           :class="
             expandAllAnimations
-              ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
+              ? 'border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent-fg)]'
               : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
           "
           @click="expandAllAnimations = !expandAllAnimations"
@@ -300,7 +300,7 @@ async function onToggleStar(q: QuestionWithProgress) {
         <div class="ml-auto flex items-center gap-2">
           <button
             type="button"
-            class="btn-ghost h-9 px-3 text-xs xl:hidden"
+            class="btn-ghost h-9 pl-2.5 pr-3 text-xs xl:hidden"
             aria-label="打开本篇章节目录"
             @click="tocDrawerOpen = true"
           >
@@ -308,9 +308,9 @@ async function onToggleStar(q: QuestionWithProgress) {
           </button>
           <RouterLink
             :to="{ name: 'study', query: { mode: 'module', slug: currentSlug } }"
-            class="btn-primary h-9 px-3.5 text-xs"
+            class="btn-primary h-9 pl-3 pr-3.5 text-xs"
           >
-            <Play class="h-3.5 w-3.5 fill-current" /> 刷本篇闪卡
+            <Play class="h-3.5 w-3.5 translate-x-[1px] fill-current" /> 刷本篇闪卡
           </RouterLink>
         </div>
       </div>
@@ -373,7 +373,7 @@ async function onToggleStar(q: QuestionWithProgress) {
               <!-- 题头带（微底色 + 独立题号微徽章 + 加大题干，一眼锚定每道新题） -->
               <header
                 class="border-b border-[var(--border-default)] px-5 py-4 transition-colors duration-150 sm:px-7 sm:py-5"
-                :class="activeId === q.id ? 'bg-[#FBF0ED]/55 dark:bg-[#231B18]' : 'bg-[var(--bg-subtle)]/75 dark:bg-[#201F1C]'"
+                :style="{ backgroundColor: activeId === q.id ? 'var(--bg-header-band-active)' : 'var(--bg-header-band)' }"
               >
                 <div class="flex items-start gap-3">
                   <div class="min-w-0 flex-1">
@@ -382,8 +382,8 @@ async function onToggleStar(q: QuestionWithProgress) {
                         class="inline-flex items-center rounded-md border px-2 py-0.5 font-mono text-xs font-semibold transition-colors"
                         :class="
                           activeId === q.id
-                            ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#B53D24] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EC765C]'
-                            : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[#C84B31] dark:text-[#E06246]'
+                            ? 'border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent-fg)]'
+                            : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--accent)]'
                         "
                       >
                         § {{ q.code }}
@@ -399,7 +399,7 @@ async function onToggleStar(q: QuestionWithProgress) {
                   <div class="flex shrink-0 items-center gap-1">
                     <RouterLink
                       :to="{ name: 'study', query: { mode: 'single', id: q.id } }"
-                      class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                      class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--accent)]"
                       title="以闪卡背诵本题"
                       aria-label="以闪卡背诵本题"
                     >
@@ -429,14 +429,14 @@ async function onToggleStar(q: QuestionWithProgress) {
                       class="flex w-full items-center justify-between rounded-lg border px-3.5 py-2.5 text-left text-xs font-medium transition-colors"
                       :class="
                         isAnimExpanded(q.id)
-                          ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
+                          ? 'border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent-fg)]'
                           : 'border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:border-[var(--border-strong)]'
                       "
                       :aria-expanded="isAnimExpanded(q.id)"
                       @click="toggleAnim(q.id)"
                     >
                       <span class="inline-flex items-center gap-2">
-                        <Clapperboard class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" />
+                        <Clapperboard class="h-4 w-4 text-[var(--accent)]" />
                         <span>交互式原理推演</span>
                       </span>
                       <span class="font-mono text-[11px] text-[var(--text-muted)]">
@@ -453,9 +453,9 @@ async function onToggleStar(q: QuestionWithProgress) {
 
                   <div
                     v-if="q.progress.personalNote"
-                    class="mt-5 flex items-start gap-2 rounded-lg border border-[#EFC9BF] bg-[#FBF0ED]/65 px-3.5 py-2.5 text-xs leading-relaxed text-[var(--text-primary)] dark:border-[#572C22] dark:bg-[#2E1B16]/60"
+                    class="mt-5 flex items-start gap-2 rounded-lg border border-[var(--accent-border)] bg-[var(--accent-soft)] px-3.5 py-2.5 text-xs leading-relaxed text-[var(--text-primary)]"
                   >
-                    <NotebookPen class="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#C84B31] dark:text-[#E06246]" />
+                    <NotebookPen class="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--accent)]" />
                     <span><strong>我的助记：</strong>{{ q.progress.personalNote }}</span>
                   </div>
                 </div>
@@ -463,7 +463,7 @@ async function onToggleStar(q: QuestionWithProgress) {
                 <button
                   v-else
                   type="button"
-                  class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)]/70 py-5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:border-[#C84B31]/50 hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                  class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)]/70 py-5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
                   @click="toggleAnswer(q.id)"
                 >
                   <Eye class="h-4 w-4" /> 点击展开参考答案自测
@@ -473,7 +473,7 @@ async function onToggleStar(q: QuestionWithProgress) {
               <!-- 极简题尾收口条（仅在答案展开时展示，提供阅读收束感与顺手操作） -->
               <footer
                 v-if="isAnswerShown(q.id)"
-                class="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-default)] bg-[var(--bg-subtle)]/45 px-5 py-2.5 text-xs dark:bg-[#161513] sm:px-7"
+                class="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-default)] bg-[var(--bg-footer-band)] px-5 py-2.5 text-xs sm:px-7"
               >
                 <span class="font-mono text-[11.5px] tabular-nums text-[var(--text-muted)]">
                   {{ q.code }} · {{ p0Only ? 'P0 精选' : '本篇进度' }} {{ orderedQuestionMetaMap.get(q.id)?.index ?? '-' }} / {{ orderedQuestionMetaMap.get(q.id)?.total ?? filteredQuestions.length }}
@@ -502,7 +502,7 @@ async function onToggleStar(q: QuestionWithProgress) {
 
                   <RouterLink
                     :to="{ name: 'study', query: { mode: 'single', id: q.id } }"
-                    class="inline-flex items-center gap-1 rounded-md py-1 pl-2 pr-2.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                    class="inline-flex items-center gap-1 rounded-md py-1 pl-2 pr-2.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--accent)]"
                   >
                     <Zap class="h-3.5 w-3.5" />
                     <span>刷本题闪卡</span>
@@ -511,7 +511,7 @@ async function onToggleStar(q: QuestionWithProgress) {
                   <button
                     v-if="orderedQuestionMetaMap.get(q.id)?.nextId != null"
                     type="button"
-                    class="inline-flex items-center gap-1 rounded-md py-1 pl-2.5 pr-2 font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                    class="inline-flex items-center gap-1 rounded-md py-1 pl-2.5 pr-2 font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--accent)]"
                     @click="scrollToQuestion(orderedQuestionMetaMap.get(q.id)!.nextId!)"
                   >
                     <span>下一题</span>
@@ -530,7 +530,7 @@ async function onToggleStar(q: QuestionWithProgress) {
           <span class="text-xs font-semibold text-[var(--text-primary)]">本篇目录</span>
           <span class="font-mono text-[11px] tabular-nums text-[var(--text-muted)]">{{ filteredQuestions.length }} 题</span>
         </div>
-        <nav class="max-h-[calc(100vh-12rem)] space-y-3 overflow-y-auto p-3 text-xs" aria-label="章节大纲">
+        <nav class="max-h-[calc(100vh-12rem)] space-y-3 overflow-y-auto overscroll-contain p-3 text-xs" aria-label="章节大纲">
           <div v-for="ch in groupedChapters" :key="ch.id">
             <p class="mb-1 truncate px-2 font-semibold text-[var(--text-primary)]">
               {{ ch.title.replace(/^第[一二三四五六七八九十]+(?:篇|部分)[：:]\s*/, '') }}
@@ -543,7 +543,7 @@ async function onToggleStar(q: QuestionWithProgress) {
                 class="flex w-full items-center gap-1.5 rounded-md border px-2 py-1.5 text-left transition-colors"
                 :class="
                   activeId === q.id
-                    ? 'border-[var(--border-default)] bg-[var(--bg-subtle)] font-medium text-[#C84B31] dark:text-[#E06246]'
+                    ? 'border-[var(--border-default)] bg-[var(--bg-subtle)] font-medium text-[var(--accent)]'
                     : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]/60 hover:text-[var(--text-primary)]'
                 "
                 @click="scrollToQuestion(q.id)"
@@ -583,7 +583,7 @@ async function onToggleStar(q: QuestionWithProgress) {
               <X class="h-5 w-5" />
             </button>
           </div>
-          <nav class="flex-1 space-y-4 overflow-y-auto p-3 text-xs">
+          <nav class="flex-1 space-y-4 overflow-y-auto overscroll-contain p-3 text-xs">
             <div v-for="ch in groupedChapters" :key="ch.id">
               <p class="mb-1.5 px-2 font-semibold text-[var(--text-primary)]">{{ ch.title }}</p>
               <div class="space-y-0.5">
@@ -594,7 +594,7 @@ async function onToggleStar(q: QuestionWithProgress) {
                   class="flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left"
                   :class="
                     activeId === q.id
-                      ? 'border-[var(--border-default)] bg-[var(--bg-subtle)] font-medium text-[#C84B31] dark:text-[#E06246]'
+                      ? 'border-[var(--border-default)] bg-[var(--bg-subtle)] font-medium text-[var(--accent)]'
                       : 'border-transparent text-[var(--text-secondary)]'
                   "
                   @click="scrollToQuestion(q.id)"

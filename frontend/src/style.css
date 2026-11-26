@@ -24,7 +24,7 @@
   --font-sans: 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'Fira Code', Consolas, monospace;
 
-  /* 陶土朱砂主色阶 (Terracotta Vermilion) — 完整 50~950 确保深浅模式对比度 */
+  /* 陶土朱砂主色阶（用于 P0 考频等语义标识） */
   --color-brand-50: #fbf0ed;
   --color-brand-100: #f6ddd6;
   --color-brand-200: #efc0b3;
@@ -41,44 +41,314 @@
   --color-ink-950: #111110;
 }
 
-:root {
+/* ---------------------------------------------------------------- */
+/* 多主题语义颜色令牌（4 浅 + 3 深）                                   */
+/* ---------------------------------------------------------------- */
+:root,
+html[data-theme='paper'] {
   --bg-canvas: #F7F6F2;
   --bg-surface: #FFFFFF;
   --bg-subtle: #F4F2EC;
   --bg-sidebar: #F1EFE9;
+  --bg-header-band: #F5F3EE;
+  --bg-header-band-active: #FBF1EE;
+  --bg-footer-band: #FAF9F5;
+  --bg-code: #FAF9F5;
+  --bg-table-stripe: #FAF9F6;
   --border-default: #E5E2DA;
   --border-strong: #D4D0C5;
   --text-primary: #161614;
+  --text-body: #2B2A26;
   --text-secondary: #5E5A52;
   --text-muted: #6E695F;
   --accent: #C84B31;
   --accent-hover: #B53D24;
+  --accent-active: #96311D;
+  --accent-fg: #96311D;
   --accent-soft: #FBF0ED;
   --accent-border: #EFC9BF;
+  --accent-btn-bg: #C84B31;
+  --accent-btn-hover: #B53D24;
+  --accent-btn-active: #96311D;
+  --selection-bg: rgb(200 75 49 / 0.16);
+  --selection-fg: #7B2B1C;
+  --code-inline-fg: #96311D;
   --ok: #2E6F5E;
   --ok-soft: #EBF4F1;
   --warn: #B45309;
   --warn-soft: #FEF6EA;
+  --heat-0: #ECE9E0;
+  --heat-1: #F6DDD6;
+  --heat-2: #E59A86;
+  --heat-3: #C84B31;
+  --heat-4: #96311D;
+  --shadow-popover:
+    0 0 0 1px oklch(0 0 0 / 0.06),
+    0 4px 12px -2px oklch(0 0 0 / 0.08),
+    0 12px 24px -6px oklch(0 0 0 / 0.06);
 }
 
-.dark {
+html[data-theme='matcha'] {
+  --bg-canvas: #EFF4F0;
+  --bg-surface: #F9FCF9;
+  --bg-subtle: #E5EFE7;
+  --bg-sidebar: #E6EFE8;
+  --bg-header-band: #E9F2EB;
+  --bg-header-band-active: #E1F0E8;
+  --bg-footer-band: #F0F6F1;
+  --bg-code: #F2F7F3;
+  --bg-table-stripe: #F2F7F3;
+  --border-default: #D2E0D5;
+  --border-strong: #B9CEBE;
+  --text-primary: #14221B;
+  --text-body: #22352B;
+  --text-secondary: #465F52;
+  --text-muted: #587164;
+  --accent: #236B56;
+  --accent-hover: #1B5745;
+  --accent-active: #154537;
+  --accent-fg: #174D3E;
+  --accent-soft: #E2F2EB;
+  --accent-border: #B3DAC8;
+  --accent-btn-bg: #236B56;
+  --accent-btn-hover: #1B5745;
+  --accent-btn-active: #154537;
+  --selection-bg: rgb(35 107 86 / 0.16);
+  --selection-fg: #154537;
+  --code-inline-fg: #185443;
+  --ok: #236B56;
+  --ok-soft: #E2F2EB;
+  --warn: #B45309;
+  --warn-soft: #FEF6EA;
+  --heat-0: #DFEAE2;
+  --heat-1: #C2E2D4;
+  --heat-2: #77BFA5;
+  --heat-3: #236B56;
+  --heat-4: #154537;
+  --shadow-popover:
+    0 0 0 1px oklch(0 0 0 / 0.06),
+    0 4px 12px -2px oklch(0 0 0 / 0.08),
+    0 12px 24px -6px oklch(0 0 0 / 0.06);
+}
+
+html[data-theme='sepia'] {
+  --bg-canvas: #F4ECD8;
+  --bg-surface: #FBF6EA;
+  --bg-subtle: #ECE1C6;
+  --bg-sidebar: #EFE5CD;
+  --bg-header-band: #EEE3C9;
+  --bg-header-band-active: #F7E8D4;
+  --bg-footer-band: #F5EEDB;
+  --bg-code: #F4ECDA;
+  --bg-table-stripe: #F6EEDC;
+  --border-default: #DFD2B5;
+  --border-strong: #C9B997;
+  --text-primary: #2B2118;
+  --text-body: #3C2F23;
+  --text-secondary: #685745;
+  --text-muted: #776552;
+  --accent: #A8541A;
+  --accent-hover: #8F4412;
+  --accent-active: #76360D;
+  --accent-fg: #7D3B0F;
+  --accent-soft: #F7E7D3;
+  --accent-border: #E2C29D;
+  --accent-btn-bg: #A8541A;
+  --accent-btn-hover: #8F4412;
+  --accent-btn-active: #76360D;
+  --selection-bg: rgb(168 84 26 / 0.18);
+  --selection-fg: #682E0A;
+  --code-inline-fg: #874011;
+  --ok: #2E6F5E;
+  --ok-soft: #EBF4EE;
+  --warn: #B45309;
+  --warn-soft: #FDF3DA;
+  --heat-0: #E5DAC0;
+  --heat-1: #F1D7B8;
+  --heat-2: #DFAA76;
+  --heat-3: #A8541A;
+  --heat-4: #76360D;
+  --shadow-popover:
+    0 0 0 1px oklch(0 0 0 / 0.07),
+    0 4px 12px -2px oklch(0 0 0 / 0.08),
+    0 12px 24px -6px oklch(0 0 0 / 0.06);
+}
+
+html[data-theme='slate'] {
+  --bg-canvas: #F3F6FA;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #EAF0F6;
+  --bg-sidebar: #EDF2F7;
+  --bg-header-band: #EDF2F8;
+  --bg-header-band-active: #E8F0FE;
+  --bg-footer-band: #F7F9FC;
+  --bg-code: #F5F8FC;
+  --bg-table-stripe: #F7F9FC;
+  --border-default: #DCE3EC;
+  --border-strong: #C4CFDD;
+  --text-primary: #0F172A;
+  --text-body: #1E293B;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --accent: #2457C5;
+  --accent-hover: #1D47A6;
+  --accent-active: #173A8A;
+  --accent-fg: #1D459F;
+  --accent-soft: #EAF1FF;
+  --accent-border: #BDD1FB;
+  --accent-btn-bg: #2457C5;
+  --accent-btn-hover: #1D47A6;
+  --accent-btn-active: #173A8A;
+  --selection-bg: rgb(36 87 197 / 0.15);
+  --selection-fg: #173A8A;
+  --code-inline-fg: #1D47A6;
+  --ok: #256F5B;
+  --ok-soft: #E9F5F1;
+  --warn: #B45309;
+  --warn-soft: #FEF6EA;
+  --heat-0: #E2E8F0;
+  --heat-1: #CFE0FC;
+  --heat-2: #87B1F8;
+  --heat-3: #2457C5;
+  --heat-4: #173A8A;
+  --shadow-popover:
+    0 0 0 1px oklch(0 0 0 / 0.06),
+    0 4px 12px -2px oklch(0 0 0 / 0.08),
+    0 12px 24px -6px oklch(0 0 0 / 0.06);
+}
+
+.dark,
+html[data-theme='graphite'] {
   --bg-canvas: #111110;
   --bg-surface: #1A1917;
   --bg-subtle: #22211E;
   --bg-sidebar: #151513;
+  --bg-header-band: #201F1C;
+  --bg-header-band-active: #231B18;
+  --bg-footer-band: #161513;
+  --bg-code: #151412;
+  --bg-table-stripe: #1E1D1A;
   --border-default: #2B2A26;
   --border-strong: #3B3933;
   --text-primary: #ECEAE4;
+  --text-body: #D5D1C7;
   --text-secondary: #A8A397;
   --text-muted: #928D81;
   --accent: #E06246;
   --accent-hover: #EC765C;
+  --accent-active: #C84B31;
+  --accent-fg: #EFC0B3;
   --accent-soft: #2E1B16;
   --accent-border: #572C22;
+  --accent-btn-bg: #C84B31;
+  --accent-btn-hover: #B53D24;
+  --accent-btn-active: #96311D;
+  --selection-bg: rgb(224 98 70 / 0.28);
+  --selection-fg: #F6DDD6;
+  --code-inline-fg: #EFC0B3;
   --ok: #4FA58E;
   --ok-soft: #162923;
   --warn: #E09A3E;
   --warn-soft: #2B2113;
+  --heat-0: #24231F;
+  --heat-1: #4A251D;
+  --heat-2: #7B3424;
+  --heat-3: #B53D24;
+  --heat-4: #E06246;
+  --shadow-popover:
+    0 0 0 1px oklch(1 0 0 / 0.08),
+    0 12px 28px -6px oklch(0 0 0 / 0.55);
+}
+
+html[data-theme='midnight'] {
+  --bg-canvas: #0E141F;
+  --bg-surface: #151D2C;
+  --bg-subtle: #1C263A;
+  --bg-sidebar: #111826;
+  --bg-header-band: #1A2334;
+  --bg-header-band-active: #1A2742;
+  --bg-footer-band: #121927;
+  --bg-code: #101725;
+  --bg-table-stripe: #182132;
+  --border-default: #243147;
+  --border-strong: #334461;
+  --text-primary: #E6EDF7;
+  --text-body: #CBD5E5;
+  --text-secondary: #96A5BC;
+  --text-muted: #7D8EA8;
+  --accent: #5B9BF8;
+  --accent-hover: #79AFFA;
+  --accent-active: #3B7EE6;
+  --accent-fg: #A5CAFD;
+  --accent-soft: #182947;
+  --accent-border: #2B497B;
+  --accent-btn-bg: #2563EB;
+  --accent-btn-hover: #1D4ED8;
+  --accent-btn-active: #1E40AF;
+  --selection-bg: rgb(91 155 248 / 0.28);
+  --selection-fg: #DBEAFE;
+  --code-inline-fg: #93C5FD;
+  --ok: #4FA58E;
+  --ok-soft: #142A25;
+  --warn: #E09A3E;
+  --warn-soft: #2B2113;
+  --heat-0: #1C2536;
+  --heat-1: #1B3258;
+  --heat-2: #224E96;
+  --heat-3: #2F6FE0;
+  --heat-4: #60A5FA;
+  --shadow-popover:
+    0 0 0 1px oklch(1 0 0 / 0.08),
+    0 12px 28px -6px oklch(0 0 0 / 0.55);
+}
+
+html[data-theme='forest'] {
+  --bg-canvas: #131A17;
+  --bg-surface: #1A231F;
+  --bg-subtle: #222E29;
+  --bg-sidebar: #161F1B;
+  --bg-header-band: #1F2A25;
+  --bg-header-band-active: #193028;
+  --bg-footer-band: #161F1B;
+  --bg-code: #141C18;
+  --bg-table-stripe: #1D2722;
+  --border-default: #293731;
+  --border-strong: #394B43;
+  --text-primary: #E4EFE9;
+  --text-body: #CAD8D1;
+  --text-secondary: #94A99F;
+  --text-muted: #7E948A;
+  --accent: #56B498;
+  --accent-hover: #6FC4AA;
+  --accent-active: #3E997E;
+  --accent-fg: #98DAC5;
+  --accent-soft: #17322A;
+  --accent-border: #295849;
+  --accent-btn-bg: #246D58;
+  --accent-btn-hover: #1D5948;
+  --accent-btn-active: #17483A;
+  --selection-bg: rgb(86 180 152 / 0.28);
+  --selection-fg: #D1FAE5;
+  --code-inline-fg: #86CBB7;
+  --ok: #56B498;
+  --ok-soft: #17322A;
+  --warn: #E09A3E;
+  --warn-soft: #2B2113;
+  --heat-0: #1F2A25;
+  --heat-1: #1C3C32;
+  --heat-2: #225D4C;
+  --heat-3: #2C856B;
+  --heat-4: #56B498;
+  --shadow-popover:
+    0 0 0 1px oklch(1 0 0 / 0.08),
+    0 12px 28px -6px oklch(0 0 0 / 0.55);
+}
+
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
 }
 
 html {
@@ -94,12 +364,8 @@ body {
 }
 
 ::selection {
-  background-color: rgb(200 75 49 / 0.16);
-  color: #7b2b1c;
-}
-.dark ::selection {
-  background-color: rgb(224 98 70 / 0.28);
-  color: #f6ddd6;
+  background-color: var(--selection-bg);
+  color: var(--selection-fg);
 }
 
 input,
@@ -121,12 +387,26 @@ select {
   background-color: var(--bg-surface);
 }
 
+/* 浮层统一表面（1px 边框保底兼容强制高对比模式 + 分层柔影/微光环） */
+.popover-surface {
+  border: 1px solid var(--border-default);
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-popover);
+}
+
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors duration-150 select-none cursor-pointer active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500;
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors duration-150 select-none cursor-pointer active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)];
 }
 
 .btn-primary {
-  @apply btn bg-[#C84B31] text-white hover:bg-[#B53D24] active:bg-[#96311D];
+  @apply btn text-white;
+  background-color: var(--accent-btn-bg);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-btn-hover);
+}
+.btn-primary:active:not(:disabled) {
+  background-color: var(--accent-btn-active);
 }
 
 .btn-ghost {
@@ -145,7 +425,8 @@ mark {
 /* Markdown 答案排版 (工程手稿正文风格)                                 */
 /* ---------------------------------------------------------------- */
 .md {
-  @apply text-[15.5px] leading-[1.82] text-[#2B2A26] dark:text-[#D5D1C7];
+  @apply text-[15.5px] leading-[1.82];
+  color: var(--text-body);
   word-break: break-word;
 }
 .md > * + * {
@@ -169,19 +450,20 @@ mark {
 }
 .md .sub-point::before {
   content: '▸ ';
-  @apply text-[#C84B31] dark:text-[#E06246];
+  color: var(--accent);
 }
 .md strong {
   @apply font-semibold text-[var(--text-primary)];
 }
 .md ul {
-  @apply list-disc space-y-1.5 pl-5 marker:text-[#8A8478];
+  @apply list-disc space-y-1.5 pl-5 marker:text-[var(--text-muted)];
 }
 .md ol {
-  @apply list-decimal space-y-1.5 pl-5 marker:font-mono marker:text-xs marker:text-[#8A8478];
+  @apply list-decimal space-y-1.5 pl-5 marker:font-mono marker:text-xs marker:text-[var(--text-muted)];
 }
 .md :not(pre) > code {
-  @apply rounded border border-[var(--border-default)] bg-[var(--bg-subtle)] px-1.5 py-0.5 font-mono text-[0.85em] text-[#96311D] dark:text-[#EFC0B3];
+  @apply rounded border border-[var(--border-default)] bg-[var(--bg-subtle)] px-1.5 py-0.5 font-mono text-[0.85em];
+  color: var(--code-inline-fg);
 }
 /* 完整 1px 边框 + 暖纸底色，避免圆角单边色条 */
 .md blockquote {
@@ -212,11 +494,19 @@ mark {
   background-color: #F0F7F4;
   color: #1E293B;
 }
+html[data-theme='sepia'] .md .callout-interview {
+  border-color: #C2D4C5;
+  background-color: #EDF4EE;
+}
 .dark .md .callout-interview {
   border-color: #23493D;
   border-left-color: #4FA58E;
   background-color: #132620;
   color: #DCE7E2;
+}
+html[data-theme='forest'] .md .callout-interview {
+  border-color: #28594A;
+  background-color: #112B23;
 }
 .md .callout-interview .callout-head {
   @apply mb-2 flex flex-wrap items-baseline gap-2 border-b pb-1.5;
@@ -283,6 +573,10 @@ mark {
   background-color: #FFFBEB;
   color: #292524;
 }
+html[data-theme='sepia'] .md .callout-pitfall {
+  border-color: #E8CD82;
+  background-color: #FDF3DA;
+}
 .dark .md .callout-pitfall {
   border-color: #593D16;
   border-left-color: #E09A3E;
@@ -314,6 +608,10 @@ mark {
   background-color: #EFF6FF;
   color: #1E293B;
 }
+html[data-theme='sepia'] .md .callout-followup {
+  border-color: #BACBE3;
+  background-color: #EEF3FA;
+}
 .dark .md .callout-followup {
   border-color: #253E63;
   border-left-color: #60A5FA;
@@ -336,8 +634,10 @@ mark {
   background-color: #0E1828;
   color: #93C5FD;
 }
+
+/* 图片（纯黑白 1px 内嵌描边，不染背景色边） */
 .md img {
-  @apply mx-auto max-h-[440px] cursor-zoom-in rounded-lg border border-[var(--border-default)] bg-white object-contain transition-[border-color,opacity] duration-150 hover:border-[var(--border-strong)] dark:bg-[#E8E4DA];
+  @apply mx-auto max-h-[440px] cursor-zoom-in rounded-lg bg-white object-contain outline-1 -outline-offset-1 outline-black/10 transition-opacity duration-150 hover:opacity-95 dark:bg-[#E8E4DA] dark:outline-white/10;
 }
 .md .img-caption {
   @apply -mt-1 text-center text-xs text-[var(--text-muted)];
@@ -355,12 +655,13 @@ mark {
   @apply min-w-[120px] border-t border-[var(--border-default)] px-3 py-2.5 align-top;
 }
 .md tbody tr:nth-child(even) {
-  @apply bg-[#FAF9F6] dark:bg-[#1E1D1A];
+  background-color: var(--bg-table-stripe);
 }
 
 /* 代码块 */
 .md .code-block {
-  @apply relative overflow-hidden rounded-lg border border-[var(--border-default)] bg-[#FAF9F5] dark:bg-[#151412];
+  @apply relative overflow-hidden rounded-lg border border-[var(--border-default)];
+  background-color: var(--bg-code);
 }
 .md .code-block .code-head {
   @apply flex items-center justify-between border-b border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-[var(--text-muted)];
@@ -369,7 +670,7 @@ mark {
   @apply cursor-pointer rounded px-2 py-0.5 normal-case tracking-normal text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)];
 }
 .md .code-block .copy-btn.is-copied {
-  @apply text-[#2E6F5E] dark:text-[#4FA58E];
+  color: var(--ok);
 }
 .md pre {
   @apply overflow-x-auto px-4 py-3 font-mono text-[13px] leading-relaxed;

@@ -243,7 +243,7 @@ const shortcuts = [
 
           <p class="mt-8 text-2xl font-semibold leading-snug tracking-tight text-[var(--text-primary)]">
             主动回忆与 SM-2 间隔排期，<br />
-            <span class="text-[#C84B31] dark:text-[#E06246]">把底层原理真正刻进肌肉记忆。</span>
+            <span class="text-[var(--accent)]">把底层原理真正刻进肌肉记忆。</span>
           </p>
 
           <dl class="mt-7 grid grid-cols-2 divide-x divide-y overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] [border-color:var(--border-default)] [&>div]:border-[var(--border-default)]">
@@ -273,13 +273,13 @@ const shortcuts = [
         </div>
 
         <!-- 顶部模式切换器 -->
-        <div class="mb-6 inline-flex self-start rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-0.5">
+        <div class="mb-6 inline-flex self-start rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-subtle)] p-1">
           <button
             type="button"
             class="rounded-md px-3.5 py-1.5 text-xs font-medium transition-colors"
             :class="
               mode === 'login'
-                ? 'bg-[var(--bg-surface)] text-[#C84B31] shadow-2xs dark:text-[#E06246]'
+                ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-2xs'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             "
             @click="switchMode('login')"
@@ -291,7 +291,7 @@ const shortcuts = [
             class="rounded-md px-3.5 py-1.5 text-xs font-medium transition-colors"
             :class="
               mode === 'register'
-                ? 'bg-[var(--bg-surface)] text-[#C84B31] shadow-2xs dark:text-[#E06246]'
+                ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-2xs'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             "
             @click="switchMode('register')"
@@ -301,7 +301,7 @@ const shortcuts = [
           <button
             v-if="mode === 'reset'"
             type="button"
-            class="rounded-md bg-[var(--bg-surface)] px-3.5 py-1.5 text-xs font-medium text-[#C84B31] shadow-2xs dark:text-[#E06246]"
+            class="rounded-md bg-[var(--bg-surface)] px-3.5 py-1.5 text-xs font-medium text-[var(--accent)] shadow-2xs"
           >
             找回密码
           </button>
@@ -327,7 +327,7 @@ const shortcuts = [
               v-model="loginEmail"
               type="email"
               autocomplete="email"
-              class="mt-1.5 h-11 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500"
+              class="mt-1.5 h-11 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--accent)]"
               placeholder="name@example.com"
             />
           </div>
@@ -337,7 +337,7 @@ const shortcuts = [
               <label for="login-password" class="block text-sm font-medium text-[var(--text-primary)]">密码</label>
               <button
                 type="button"
-                class="text-xs text-[var(--text-muted)] hover:text-[#C84B31] dark:hover:text-[#E06246]"
+                class="text-xs text-[var(--text-muted)] hover:text-[var(--accent)]"
                 @click="switchMode('reset')"
               >
                 忘记密码？
@@ -349,12 +349,12 @@ const shortcuts = [
                 v-model="password"
                 :type="showPwd ? 'text' : 'password'"
                 autocomplete="current-password"
-                class="h-11 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 pr-11 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500"
+                class="h-11 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 pr-11 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--accent)]"
                 placeholder="请输入登录密码"
               />
               <button
                 type="button"
-                class="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-brand-500"
+                class="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
                 :aria-label="showPwd ? '隐藏密码' : '显示密码'"
                 @click="showPwd = !showPwd"
               >
@@ -374,7 +374,7 @@ const shortcuts = [
                 v-model="email"
                 type="email"
                 autocomplete="email"
-                class="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+                class="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                 placeholder="name@example.com"
               />
               <button
@@ -384,7 +384,7 @@ const shortcuts = [
                 @click="requestSendCode"
               >
                 <Loader2 v-if="sendingCode" class="h-3.5 w-3.5 animate-spin" />
-                <Mail v-else class="h-3.5 w-3.5 text-[#C84B31] dark:text-[#E06246]" />
+                <Mail v-else class="h-3.5 w-3.5 text-[var(--accent)]" />
                 <span class="font-mono tabular-nums">
                   {{ cooldown > 0 ? `${cooldown}s 后重发` : '获取验证码' }}
                 </span>
@@ -401,7 +401,7 @@ const shortcuts = [
                 inputmode="numeric"
                 maxlength="6"
                 autocomplete="one-time-code"
-                class="mt-1.5 h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 font-mono text-sm tracking-widest text-[var(--text-primary)] outline-none transition-colors placeholder:font-sans placeholder:tracking-normal placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+                class="mt-1.5 h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 font-mono text-sm tracking-widest text-[var(--text-primary)] outline-none transition-colors placeholder:font-sans placeholder:tracking-normal placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                 placeholder="6 位数字"
               />
             </div>
@@ -412,7 +412,7 @@ const shortcuts = [
                 id="reg-username"
                 v-model="regUsername"
                 autocomplete="nickname"
-                class="mt-1.5 h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+                class="mt-1.5 h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                 placeholder="用于右上角头像展示"
               />
             </div>
@@ -426,7 +426,7 @@ const shortcuts = [
                 v-model="regPassword"
                 :type="showPwd ? 'text' : 'password'"
                 autocomplete="new-password"
-                class="h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 pr-10 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+                class="h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 pr-10 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                 placeholder="至少 6 位密码"
               />
               <button
@@ -451,7 +451,7 @@ const shortcuts = [
                 v-model="email"
                 type="email"
                 autocomplete="email"
-                class="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+                class="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                 placeholder="输入注册时使用的邮箱"
               />
               <button
@@ -461,7 +461,7 @@ const shortcuts = [
                 @click="requestSendCode"
               >
                 <Loader2 v-if="sendingCode" class="h-3.5 w-3.5 animate-spin" />
-                <Mail v-else class="h-3.5 w-3.5 text-[#C84B31] dark:text-[#E06246]" />
+                <Mail v-else class="h-3.5 w-3.5 text-[var(--accent)]" />
                 <span class="font-mono tabular-nums">
                   {{ cooldown > 0 ? `${cooldown}s 后重发` : '获取验证码' }}
                 </span>
@@ -477,7 +477,7 @@ const shortcuts = [
               inputmode="numeric"
               maxlength="6"
               autocomplete="one-time-code"
-              class="mt-1.5 h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 font-mono text-sm tracking-widest text-[var(--text-primary)] outline-none transition-colors placeholder:font-sans placeholder:tracking-normal placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+              class="mt-1.5 h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 font-mono text-sm tracking-widest text-[var(--text-primary)] outline-none transition-colors placeholder:font-sans placeholder:tracking-normal placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
               placeholder="输入邮件中的 6 位数字验证码"
             />
           </div>
@@ -490,7 +490,7 @@ const shortcuts = [
                 v-model="regPassword"
                 :type="showPwd ? 'text' : 'password'"
                 autocomplete="new-password"
-                class="h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 pr-10 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+                class="h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3.5 pr-10 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                 placeholder="请输入 6~64 位新密码"
               />
               <button

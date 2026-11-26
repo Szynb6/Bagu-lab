@@ -85,7 +85,7 @@ function pct(a: number, b: number) {
       <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div class="space-y-2.5">
           <div class="flex flex-wrap items-center gap-2 text-xs font-medium text-[var(--text-secondary)]">
-            <span class="inline-flex items-center gap-1.5 rounded border border-[#EFC9BF] bg-[#FBF0ED] px-2 py-0.5 font-mono text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]">
+            <span class="inline-flex items-center gap-1.5 rounded border border-[var(--accent-border)] bg-[var(--accent-soft)] px-2 py-0.5 font-mono text-[var(--accent-fg)]">
               SM-2 调度队列
             </span>
             <span class="font-mono tabular-nums text-[var(--text-muted)]">
@@ -96,7 +96,7 @@ function pct(a: number, b: number) {
           <h2 class="text-xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-2xl">
             <template v-if="todayTotal > 0">
               今日待复习
-              <span class="font-mono tabular-nums text-[#C84B31] dark:text-[#E06246]">{{ data.dueCount }}</span>
+              <span class="font-mono tabular-nums text-[var(--accent)]">{{ data.dueCount }}</span>
               题 · 新题建议
               <span class="font-mono tabular-nums text-[var(--text-primary)]">{{ data.newQuota }}</span>
               题
@@ -112,7 +112,7 @@ function pct(a: number, b: number) {
             </span>
             <div class="h-1.5 w-36 overflow-hidden rounded-full bg-[var(--bg-subtle)]">
               <div
-                class="h-full rounded-full bg-[#C84B31] transition-[width] duration-300 dark:bg-[#E06246]"
+                class="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
                 :style="{ width: `${goalPct}%` }"
               />
             </div>
@@ -121,13 +121,13 @@ function pct(a: number, b: number) {
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5">
-          <RouterLink :to="{ name: 'study', query: { mode: 'today' } }" class="btn-primary h-10 px-4">
-            <Play class="h-4 w-4 fill-current" />
+          <RouterLink :to="{ name: 'study', query: { mode: 'today' } }" class="btn-primary h-10 pl-3.5 pr-4">
+            <Play class="h-4 w-4 translate-x-[1px] fill-current" />
             开始今日复习
             <span v-if="todayTotal > 0" class="font-mono text-xs opacity-90">({{ todayTotal }})</span>
           </RouterLink>
-          <RouterLink :to="{ name: 'study', query: { mode: 'p0' } }" class="btn-ghost h-10 px-4">
-            <Target class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" />
+          <RouterLink :to="{ name: 'study', query: { mode: 'p0' } }" class="btn-ghost h-10 pl-3.5 pr-4">
+            <Target class="h-4 w-4 text-[var(--accent)]" />
             只刷 P0 必背
           </RouterLink>
         </div>
@@ -154,20 +154,20 @@ function pct(a: number, b: number) {
 
       <button
         type="button"
-        class="p-4 text-left transition-colors hover:bg-[var(--bg-subtle)]/60 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-brand-500 sm:p-5"
+        class="p-4 text-left transition-colors hover:bg-[var(--bg-subtle)]/60 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[var(--accent)] sm:p-5"
         @click="router.push({ name: 'study', query: { mode: 'p0' } })"
       >
         <div class="flex items-center justify-between text-xs text-[var(--text-secondary)]">
           <span>P0 必背攻坚</span>
-          <Target class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" />
+          <Target class="h-4 w-4 text-[var(--accent)]" />
         </div>
         <div class="mt-2 flex items-baseline gap-1.5">
           <span class="font-mono text-2xl font-semibold tabular-nums text-[var(--text-primary)]">{{ data.p0Mastered }}</span>
           <span class="font-mono text-sm tabular-nums text-[var(--text-muted)]">/ {{ data.p0Total }}</span>
-          <span class="ml-auto font-mono text-xs font-medium tabular-nums text-[#C84B31] dark:text-[#E06246]">{{ p0Pct }}%</span>
+          <span class="ml-auto font-mono text-xs font-medium tabular-nums text-[var(--accent)]">{{ p0Pct }}%</span>
         </div>
         <div class="mt-2.5 h-1 overflow-hidden rounded-full bg-[var(--bg-subtle)]">
-          <div class="h-full bg-[#C84B31] transition-[width] duration-300 dark:bg-[#E06246]" :style="{ width: `${p0Pct}%` }" />
+          <div class="h-full bg-[var(--accent)] transition-[width] duration-300" :style="{ width: `${p0Pct}%` }" />
         </div>
         <p class="mt-2 text-xs text-[var(--text-muted)]">考前核心必背，点击开刷 →</p>
       </button>
@@ -212,7 +212,7 @@ function pct(a: number, b: number) {
         </div>
         <RouterLink
           :to="{ name: 'bank' }"
-          class="inline-flex items-center gap-1 text-sm font-medium text-[#C84B31] transition-colors hover:text-[#96311D] dark:text-[#E06246]"
+          class="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
         >
           进入全量题库 <ArrowRight class="h-4 w-4" />
         </RouterLink>
@@ -231,7 +231,7 @@ function pct(a: number, b: number) {
                 <h3 class="truncate font-semibold text-[var(--text-primary)]">{{ m.title }}</h3>
                 <span
                   v-if="m.due > 0"
-                  class="ml-auto shrink-0 rounded border border-[#EFC9BF] bg-[#FBF0ED] px-1.5 py-0.5 font-mono text-[11px] font-medium tabular-nums text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]"
+                  class="ml-auto shrink-0 rounded border border-[var(--accent-border)] bg-[var(--accent-soft)] px-1.5 py-0.5 font-mono text-[11px] font-medium tabular-nums text-[var(--accent-fg)]"
                 >
                   {{ m.due }} 到期
                 </span>
@@ -270,13 +270,13 @@ function pct(a: number, b: number) {
           <div class="mt-4 flex items-center justify-between gap-2 border-t border-[var(--border-default)] pt-3 text-xs">
             <RouterLink
               :to="{ name: 'reader', params: { slug: m.slug } }"
-              class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]"
+              class="inline-flex items-center gap-1.5 rounded-md py-1 pl-2 pr-2.5 font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]"
             >
               <BookOpen class="h-3.5 w-3.5" /> 沉浸通读
             </RouterLink>
             <RouterLink
               :to="{ name: 'study', query: { mode: 'module', slug: m.slug } }"
-              class="inline-flex items-center gap-1 rounded-md px-2.5 py-1 font-medium text-[#C84B31] transition-colors hover:bg-[#FBF0ED] dark:text-[#E06246] dark:hover:bg-[#2E1B16]"
+              class="inline-flex items-center gap-1 rounded-md py-1 pl-2 pr-2.5 font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent-soft)]"
             >
               <Zap class="h-3.5 w-3.5" /> 专项闪卡 →
             </RouterLink>
@@ -333,7 +333,7 @@ function pct(a: number, b: number) {
 
         <div class="mt-5 flex items-center justify-between border-t border-[var(--border-default)] pt-3 text-xs text-[var(--text-muted)]">
           <span>含 91 组交互式原理动画</span>
-          <RouterLink :to="{ name: 'bank', query: { status: 'animated' } }" class="font-medium text-[#C84B31] hover:underline dark:text-[#E06246]">
+          <RouterLink :to="{ name: 'bank', query: { status: 'animated' } }" class="font-medium text-[var(--accent)] hover:underline">
             浏览全部动画题 →
           </RouterLink>
         </div>

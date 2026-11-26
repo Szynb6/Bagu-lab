@@ -237,13 +237,13 @@ async function onToggleStar(q: QuestionItem) {
       <div class="border-b border-[var(--border-default)] px-4 py-3">
         <p class="text-xs font-semibold text-[var(--text-primary)]">知识卷目索引</p>
       </div>
-      <div class="max-h-[calc(100vh-11rem)] space-y-0.5 overflow-y-auto p-2">
+      <div class="max-h-[calc(100vh-11rem)] space-y-0.5 overflow-y-auto overscroll-contain p-2">
         <button
           type="button"
           class="flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-colors"
           :class="
             !selectedSlug
-              ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] text-[#C84B31] dark:text-[#E06246]'
+              ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] text-[var(--accent)]'
               : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]/70 hover:text-[var(--text-primary)]'
           "
           @click="selectModule('')"
@@ -260,7 +260,7 @@ async function onToggleStar(q: QuestionItem) {
             class="flex items-center gap-1 rounded-lg border px-2 py-1.5 transition-colors"
             :class="
               selectedSlug === m.slug && selectedChapter === null
-                ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] text-[#C84B31] dark:text-[#E06246]'
+                ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] text-[var(--accent)]'
                 : 'border-transparent text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]/60'
             "
           >
@@ -287,7 +287,7 @@ async function onToggleStar(q: QuestionItem) {
               class="flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors"
               :class="
                 selectedChapter === ch.id
-                  ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] font-medium text-[#C84B31] dark:text-[#E06246]'
+                  ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] font-medium text-[var(--accent)]'
                   : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]/60 hover:text-[var(--text-primary)]'
               "
               @click="selectChapter(m.slug, ch.id)"
@@ -307,7 +307,7 @@ async function onToggleStar(q: QuestionItem) {
         <button
           type="button"
           class="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
-          :class="!selectedSlug ? 'border-[#C84B31] bg-[#C84B31] text-white' : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'"
+          :class="!selectedSlug ? 'border-[var(--accent-btn-bg)] bg-[var(--accent-btn-bg)] text-white' : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'"
           @click="selectModule('')"
         >
           全部
@@ -317,7 +317,7 @@ async function onToggleStar(q: QuestionItem) {
           :key="m.slug"
           type="button"
           class="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
-          :class="selectedSlug === m.slug ? 'border-[#C84B31] bg-[#C84B31] text-white' : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'"
+          :class="selectedSlug === m.slug ? 'border-[var(--accent-btn-bg)] bg-[var(--accent-btn-bg)] text-white' : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'"
           @click="selectModule(m.slug)"
         >
           {{ m.title }}
@@ -346,13 +346,13 @@ async function onToggleStar(q: QuestionItem) {
             <RouterLink
               v-if="currentModule"
               :to="{ name: 'reader', params: { slug: currentModule.slug } }"
-              class="btn-ghost h-9 px-3 text-xs"
+              class="btn-ghost h-9 pl-2.5 pr-3 text-xs"
             >
               <BookOpen class="h-3.5 w-3.5" /> 通读本篇
             </RouterLink>
-            <button type="button" class="btn-primary h-9 px-3.5 text-xs" :disabled="!total || launchingStudy" @click="startFilteredStudy">
+            <button type="button" class="btn-primary h-9 pl-3 pr-3.5 text-xs" :disabled="!total || launchingStudy" @click="startFilteredStudy">
               <Loader2 v-if="launchingStudy" class="h-3.5 w-3.5 animate-spin" />
-              <Play v-else class="h-3.5 w-3.5 fill-current" /> 刷当前 {{ total }} 题
+              <Play v-else class="h-3.5 w-3.5 translate-x-[1px] fill-current" /> 刷当前 {{ total }} 题
             </button>
           </div>
         </div>
@@ -387,7 +387,7 @@ async function onToggleStar(q: QuestionItem) {
             <input
               id="bank-keyword"
               v-model="keyword"
-              class="h-8 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] pl-8 pr-7 text-xs text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31] focus:bg-[var(--bg-surface)]"
+              class="h-8 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] pl-8 pr-7 text-xs text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:bg-[var(--bg-surface)]"
               placeholder="筛选题干关键词..."
             />
             <button
@@ -404,7 +404,7 @@ async function onToggleStar(q: QuestionItem) {
 
         <!-- 掌握状态分段 + 内容特征标签（彻底分组、零 Emoji） -->
         <div class="flex flex-wrap items-center gap-3 border-t border-[var(--border-default)] pt-3">
-          <div class="inline-flex flex-wrap rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-0.5" role="group" aria-label="按掌握状态筛选">
+          <div class="inline-flex flex-wrap rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-subtle)] p-1" role="group" aria-label="按掌握状态筛选">
             <button
               v-for="s in masteryOptions"
               :key="s.value"
@@ -412,7 +412,7 @@ async function onToggleStar(q: QuestionItem) {
               class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
               :class="
                 status === s.value
-                  ? 'bg-[var(--bg-surface)] text-[#C84B31] shadow-2xs dark:text-[#E06246]'
+                  ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-2xs'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               "
               @click="status = s.value"
@@ -429,7 +429,7 @@ async function onToggleStar(q: QuestionItem) {
               class="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
               :class="
                 status === t.value
-                  ? 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
+                  ? 'border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent-fg)]'
                   : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
               "
               @click="status = status === t.value ? 'all' : t.value"
@@ -442,7 +442,7 @@ async function onToggleStar(q: QuestionItem) {
           <button
             v-if="hasActiveFilter"
             type="button"
-            class="ml-auto text-xs font-medium text-[var(--text-muted)] underline-offset-2 hover:text-[#C84B31] hover:underline dark:hover:text-[#E06246]"
+            class="ml-auto text-xs font-medium text-[var(--text-muted)] underline-offset-2 hover:text-[var(--accent)] hover:underline"
             @click="resetFilters"
           >
             清空筛选
@@ -457,7 +457,7 @@ async function onToggleStar(q: QuestionItem) {
 
       <!-- 错误态 -->
       <div v-else-if="loadError" class="card flex flex-col items-center justify-center px-6 py-16 text-center">
-        <TriangleAlert class="h-9 w-9 text-[#C84B31] dark:text-[#E06246]" />
+        <TriangleAlert class="h-9 w-9 text-[var(--accent)]" />
         <p class="mt-3 text-sm font-medium text-[var(--text-primary)]">{{ loadError }}</p>
         <button type="button" class="btn-primary mt-4 h-9 text-xs" @click="fetchQuestions">
           <RefreshCw class="h-3.5 w-3.5" /> 重试加载
@@ -500,10 +500,10 @@ async function onToggleStar(q: QuestionItem) {
                 </span>
                 <span
                   v-if="q.hasAnimation"
-                  class="inline-flex items-center gap-1 rounded border border-[#EFC9BF] bg-[#FBF0ED] px-1.5 py-0.5 text-[11px] font-medium text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]"
+                  class="inline-flex items-center gap-1 rounded border border-[var(--accent-border)] bg-[var(--accent-soft)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--accent-fg)]"
                   title="含交互式原理推演"
                 >
-                  <Play class="h-2.5 w-2.5 fill-current" /> 交互推演
+                  <Play class="h-2.5 w-2.5 translate-x-[0.5px] fill-current" /> 交互推演
                 </span>
                 <span v-if="q.progress.hasNote" class="inline-flex items-center gap-0.5 text-[11px] font-medium text-[#2E6F5E] dark:text-[#4FA58E]" title="有助记备注">
                   <FileText class="h-3 w-3" /> 助记
@@ -512,7 +512,7 @@ async function onToggleStar(q: QuestionItem) {
 
               <RouterLink
                 :to="{ name: 'study', query: { mode: 'single', id: String(q.id) } }"
-                class="mt-1.5 block text-[15px] font-medium leading-snug text-[var(--text-primary)] transition-colors hover:text-[#C84B31] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:hover:text-[#E06246]"
+                class="mt-1.5 block text-[15px] font-medium leading-snug text-[var(--text-primary)] transition-colors hover:text-[var(--accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               >
                 {{ q.title }}
               </RouterLink>
@@ -535,7 +535,7 @@ async function onToggleStar(q: QuestionItem) {
               </RouterLink>
               <RouterLink
                 :to="{ name: 'study', query: { mode: 'single', id: String(q.id) } }"
-                class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[#FBF0ED] hover:text-[#C84B31] lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 focus-visible:opacity-100 dark:hover:bg-[#2E1B16] dark:hover:text-[#E06246]"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 focus-visible:opacity-100"
                 title="单题闪卡"
                 aria-label="进入单题闪卡背诵"
               >
@@ -576,7 +576,7 @@ async function onToggleStar(q: QuestionItem) {
                   class="h-8 min-w-8 rounded-lg px-2 font-mono font-medium tabular-nums transition-colors"
                   :class="
                     p === page
-                      ? 'bg-[#C84B31] text-white'
+                      ? 'bg-[var(--accent-btn-bg)] text-white'
                       : 'border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
                   "
                   @click="goPage(p)"

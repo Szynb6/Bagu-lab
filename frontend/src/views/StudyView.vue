@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Clapperboard, Eye, EyeOff, HelpCircle, Image as ImageIcon,
-  Keyboard, Lightbulb, Moon, NotebookPen, PartyPopper, RefreshCw, RotateCcw, Star, Sun, TriangleAlert, Undo2, X,
+  Keyboard, Lightbulb, NotebookPen, PartyPopper, RefreshCw, RotateCcw, Star, TriangleAlert, Undo2, X,
 } from 'lucide-vue-next'
 import { studyApi } from '@/api'
 import { useUiStore } from '@/stores/ui'
@@ -11,6 +11,7 @@ import MarkdownView from '@/components/common/MarkdownView.vue'
 import QuestionAnimation from '@/components/animations/QuestionAnimation.vue'
 import PriorityBadge from '@/components/common/PriorityBadge.vue'
 import StatusDot from '@/components/common/StatusDot.vue'
+import ThemeSwitcher from '@/components/common/ThemeSwitcher.vue'
 import { previewLabel, schedule } from '@/utils/sm2'
 import { relativeTime } from '@/utils/format'
 import type { Progress, QueueMode, QueueRequest, QuestionWithProgress, Rating } from '@/types'
@@ -394,7 +395,7 @@ onBeforeUnmount(() => {
           </p>
           <div v-if="total > 0" class="mx-auto mt-1 flex max-w-xs items-center gap-2">
             <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--bg-subtle)]">
-              <div class="h-full rounded-full bg-[#C84B31] transition-[width] duration-300 dark:bg-[#E06246]" :style="{ width: `${progressPct}%` }" />
+              <div class="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300" :style="{ width: `${progressPct}%` }" />
             </div>
             <span class="font-mono text-[11px] tabular-nums text-[var(--text-muted)]">{{ finished ? total : index + 1 }}/{{ total }}</span>
           </div>
@@ -430,15 +431,7 @@ onBeforeUnmount(() => {
           >
             <Keyboard class="h-4 w-4" />
           </button>
-          <button
-            type="button"
-            class="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]"
-            :title="ui.dark ? '浅色模式' : '深色模式'"
-            :aria-label="ui.dark ? '切换浅色模式' : '切换深色模式'"
-            @click="ui.toggleTheme()"
-          >
-            <component :is="ui.dark ? Sun : Moon" class="h-4 w-4" />
-          </button>
+          <ThemeSwitcher />
         </div>
       </div>
     </header>
@@ -454,7 +447,7 @@ onBeforeUnmount(() => {
 
       <!-- 错误态 -->
       <div v-else-if="loadError" class="card my-auto flex flex-col items-center px-6 py-16 text-center">
-        <TriangleAlert class="h-10 w-10 text-[#C84B31] dark:text-[#E06246]" />
+        <TriangleAlert class="h-10 w-10 text-[var(--accent)]" />
         <h2 class="mt-4 text-lg font-semibold text-[var(--text-primary)]">加载队列失败</h2>
         <p class="mt-1.5 text-sm text-[var(--text-secondary)]">{{ loadError }}</p>
         <div class="mt-6 flex gap-3">
@@ -483,7 +476,7 @@ onBeforeUnmount(() => {
       <!-- 本轮结算页 -->
       <div v-else-if="finished" class="card my-auto space-y-6 p-7 sm:p-10">
         <div class="text-center">
-          <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-[#EFC9BF] bg-[#FBF0ED] text-[#C84B31] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#E06246]">
+          <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent)]">
             <PartyPopper class="h-7 w-7" />
           </span>
           <h2 class="mt-4 text-2xl font-semibold text-[var(--text-primary)]">本轮背诵完成</h2>
@@ -518,7 +511,7 @@ onBeforeUnmount(() => {
               </div>
               <RouterLink
                 :to="{ name: 'reader', params: { slug: wq.moduleSlug }, query: { q: String(wq.id) }, hash: `#${wq.id}` }"
-                class="shrink-0 text-[#C84B31] hover:underline dark:text-[#E06246]"
+                class="shrink-0 text-[var(--accent)] hover:underline"
               >
                 看解析
               </RouterLink>
@@ -546,7 +539,7 @@ onBeforeUnmount(() => {
             </span>
             <button
               type="button"
-              class="inline-flex items-center gap-1 font-medium text-[#C84B31] hover:underline dark:text-[#E06246]"
+              class="inline-flex items-center gap-1 font-medium text-[var(--accent)] hover:underline"
               @click="undoLastRating"
             >
               <Undo2 class="h-3.5 w-3.5" /> 撤销重评 <span class="kbd ml-0.5">Z</span>
@@ -611,10 +604,10 @@ onBeforeUnmount(() => {
             <button
               v-if="!revealed"
               type="button"
-              class="mt-7 flex w-full flex-col items-center rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)]/70 px-4 py-10 text-center transition-colors hover:border-[#C84B31]/50 hover:bg-[var(--bg-subtle)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+              class="mt-7 flex w-full flex-col items-center rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)]/70 px-4 py-10 text-center transition-colors hover:border-[var(--accent)] hover:bg-[var(--bg-subtle)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               @click="revealed = true"
             >
-              <Eye class="h-5 w-5 text-[#C84B31] dark:text-[#E06246]" />
+              <Eye class="h-5 w-5 text-[var(--accent)]" />
               <p class="mt-2.5 text-sm font-medium text-[var(--text-primary)]">先尝试在脑中复述要点，点击卡片或按 Space 核对答案</p>
               <p class="mt-1.5 text-xs text-[var(--text-muted)]">
                 <template v-if="current.animationKey">本题含交互式原理推演</template>
@@ -637,8 +630,8 @@ onBeforeUnmount(() => {
                     class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors"
                     :class="
                       showAnimation
-                        ? 'border-[#C84B31] bg-[#C84B31] text-white'
-                        : 'border-[#EFC9BF] bg-[#FBF0ED] text-[#96311D] hover:bg-[#F6DDD6] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]'
+                        ? 'border-[var(--accent-btn-bg)] bg-[var(--accent-btn-bg)] text-white'
+                        : 'border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent-fg)] hover:opacity-90'
                     "
                     @click="showAnimation = !showAnimation"
                   >
@@ -673,7 +666,7 @@ onBeforeUnmount(() => {
               <div class="mt-7 rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-4">
                 <div class="mb-2 flex items-center justify-between">
                   <label for="study-note-input" class="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-primary)]">
-                    <NotebookPen class="h-3.5 w-3.5 text-[#C84B31] dark:text-[#E06246]" />
+                    <NotebookPen class="h-3.5 w-3.5 text-[var(--accent)]" />
                     我的口述助记 / 面试追问备注
                     <span class="kbd ml-1 hidden sm:inline-flex">N</span>
                   </label>
@@ -688,7 +681,7 @@ onBeforeUnmount(() => {
                   ref="noteEl"
                   v-model="noteText"
                   rows="2"
-                  class="min-h-[68px] w-full resize-none overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 text-sm leading-relaxed text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+                  class="min-h-[68px] w-full resize-none overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 text-sm leading-relaxed text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                   placeholder="记一句自己的背诵口诀、易错点或面试官常追问的问题..."
                   @input="autoResizeNote"
                   @blur="saveNote"
@@ -774,10 +767,10 @@ onBeforeUnmount(() => {
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 backdrop-blur-xs"
         @click.self="showShortcuts = false"
       >
-        <div class="card w-full max-w-md p-6">
+        <div class="popover-surface w-full max-w-md rounded-2xl p-6">
           <div class="mb-4 flex items-center justify-between">
             <h3 id="shortcuts-title" class="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
-              <HelpCircle class="h-4 w-4 text-[#C84B31] dark:text-[#E06246]" /> 闪卡快捷键
+              <HelpCircle class="h-4 w-4 text-[var(--accent)]" /> 闪卡快捷键
             </h3>
             <button
               type="button"

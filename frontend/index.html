@@ -7,16 +7,36 @@
     <meta name="theme-color" content="#F7F6F2" id="meta-theme-color" />
     <title>Bagu Lab · Java 后端工程记忆手稿</title>
     <script>
-      // 首屏前应用主题并同步 theme-color，避免闪烁
+      // 首屏前应用多主题与极性并同步 theme-color，避免闪烁
       (function () {
         try {
-          var t = localStorage.getItem('bagu:theme');
-          var isDark = t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          if (isDark) {
-            document.documentElement.classList.add('dark');
-            var meta = document.getElementById('meta-theme-color');
-            if (meta) meta.setAttribute('content', '#111110');
-          }
+          var metaColors = {
+            paper: '#F7F6F2',
+            matcha: '#EFF4F0',
+            sepia: '#F4ECD8',
+            slate: '#F3F6FA',
+            graphite: '#111110',
+            midnight: '#0E141F',
+            forest: '#131A17',
+          };
+          var darkIds = { graphite: true, midnight: true, forest: true };
+          var raw = localStorage.getItem('bagu:theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var id =
+            raw === 'light'
+              ? 'paper'
+              : raw === 'dark'
+                ? 'graphite'
+                : raw && Object.prototype.hasOwnProperty.call(metaColors, raw)
+                  ? raw
+                  : prefersDark
+                    ? 'graphite'
+                    : 'paper';
+          var root = document.documentElement;
+          root.dataset.theme = id;
+          root.classList.toggle('dark', !!darkIds[id]);
+          var meta = document.getElementById('meta-theme-color');
+          if (meta) meta.setAttribute('content', metaColors[id]);
         } catch (e) {}
       })();
     </script>

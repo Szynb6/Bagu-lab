@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { knowledgeApi } from '@/api'
+import { resolveThemeId, THEME_MAP, type ThemeId } from '@/constants/themes'
 import type { ModuleMeta } from '@/types'
 
 export interface LightboxImage {
@@ -8,9 +9,19 @@ export interface LightboxImage {
   caption: string
 }
 
-/** 全局 UI 状态：主题、最近阅读模块、共享模块元数据缓存、图片灯箱、侧边栏 */
+/** 全局 UI 状态：多主题配色、最近阅读模块、共享模块元数据缓存、图片灯箱、侧边栏 */
 export const useUiStore = defineStore('ui', () => {
-  const dark = ref(document.documentElement.classList.contains('dark'))
+  const initialPrefersDark =
+    typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+  const initialTheme = resolveThemeId(
+    document.documentElement.dataset.theme ?? localStorage.getItem('bagu:theme'),
+    initialPrefersDark || document.documentElement.classList.contains('dark'),
+  )
+
+  const themeId = ref<ThemeId>(initialTheme)
+  const currentTheme = computed(() => THEME_MAP[themeId.value])
+  const dark = computed(() => currentTheme.value.mode === 'dark')
+
   const sidebarCollapsed = ref(localStorage.getItem('bagu:sidebar') === '1')
   const lastSlug = ref(localStorage.getItem('bagu:lastSlug') || '01-jvm')
   const lightbox = ref<{ images: LightboxImage[]; index: number } | null>(null)
@@ -19,18 +30,27 @@ export const useUiStore = defineStore('ui', () => {
   const modules = ref<ModuleMeta[]>([])
   let modulesPromise: Promise<ModuleMeta[]> | null = null
 
-  function syncThemeColorMeta() {
-    const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) {
-      meta.setAttribute('content', dark.value ? '#111110' : '#F7F6F2')
+  function applyTheme(id: ThemeId, persist = true) {
+    themeId.value = id
+    const meta = THEME_MAP[id]
+    const root = document.documentElement
+    root.dataset.theme = id
+    root.classList.toggle('dark', meta.mode === 'dark')
+    if (persist) {
+      localStorage.setItem('bagu:theme', id)
+    }
+    const themeColorEl = document.querySelector('meta[name="theme-color"]')
+    if (themeColorEl) {
+      themeColorEl.setAttribute('content', meta.metaColor)
     }
   }
 
+  function setTheme(id: ThemeId) {
+    applyTheme(id, true)
+  }
+
   function toggleTheme() {
-    dark.value = !dark.value
-    document.documentElement.classList.toggle('dark', dark.value)
-    localStorage.setItem('bagu:theme', dark.value ? 'dark' : 'light')
-    syncThemeColorMeta()
+    applyTheme(dark.value ? 'paper' : 'graphite', true)
   }
 
   function toggleSidebar() {
@@ -74,15 +94,18 @@ export const useUiStore = defineStore('ui', () => {
     timer = window.setTimeout(() => (toast.value = null), 2200)
   }
 
-  syncThemeColorMeta()
+  applyTheme(initialTheme, false)
 
   return {
+    themeId,
+    currentTheme,
     dark,
     sidebarCollapsed,
     lastSlug,
     modules,
     lightbox,
     toast,
+    setTheme,
     toggleTheme,
     toggleSidebar,
     setLastSlug,
