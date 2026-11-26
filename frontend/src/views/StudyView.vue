@@ -146,12 +146,27 @@ async function loadQueue() {
   }
 }
 
+function autoResizeNote() {
+  const el = noteEl.value
+  if (!el) return
+  const scrollX = window.scrollX
+  const scrollY = window.scrollY
+  el.style.height = 'auto'
+  const cs = window.getComputedStyle(el)
+  const borderY = (parseFloat(cs.borderTopWidth) || 0) + (parseFloat(cs.borderBottomWidth) || 0)
+  el.style.height = `${Math.ceil(el.scrollHeight + borderY)}px`
+  if (window.scrollX !== scrollX || window.scrollY !== scrollY) {
+    window.scrollTo(scrollX, scrollY)
+  }
+}
+
 function syncNote() {
   noteText.value = current.value?.progress.personalNote ?? ''
   noteSaved.value = false
   cardStart.value = Date.now()
 }
 
+watch([noteText, revealed, noteEl], () => nextTick(autoResizeNote), { flush: 'post' })
 watch(() => route.fullPath, loadQueue)
 onMounted(loadQueue)
 
@@ -347,9 +362,13 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown))
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+  window.addEventListener('resize', autoResizeNote)
+})
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('resize', autoResizeNote)
   clearTimeout(undoTimer)
 })
 </script>
@@ -669,8 +688,9 @@ onBeforeUnmount(() => {
                   ref="noteEl"
                   v-model="noteText"
                   rows="2"
-                  class="w-full resize-none rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 text-sm leading-relaxed text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
+                  class="min-h-[68px] w-full resize-none overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 text-sm leading-relaxed text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[#C84B31]"
                   placeholder="记一句自己的背诵口诀、易错点或面试官常追问的问题..."
+                  @input="autoResizeNote"
                   @blur="saveNote"
                 />
               </div>
