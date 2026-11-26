@@ -213,9 +213,9 @@ async function submit() {
 }
 
 const specs = [
-  { label: '核心模块', value: '09 卷' },
-  { label: '精选真题', value: '375 道' },
-  { label: '架构图解', value: '102 张' },
+  { label: '核心模块', value: '10 卷' },
+  { label: '精选真题', value: '629 道' },
+  { label: '架构图解', value: '159 张' },
   { label: '交互式原理推演', value: '91 组' },
 ]
 

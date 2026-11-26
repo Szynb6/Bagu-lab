@@ -343,7 +343,7 @@ async function confirmDeleteAccount() {
             <div class="rounded-lg border border-[#EFC9BF] bg-[#FBF0ED] p-3.5 text-xs leading-relaxed text-[#96311D] dark:border-[#572C22] dark:bg-[#2E1B16] dark:text-[#EFC0B3]">
               <p class="font-semibold">此操作不可撤销，确认注销后将立即抹除：</p>
               <ul class="mt-1.5 list-disc space-y-1 pl-4">
-                <li>全部 375 道题目的 SM-2 记忆进度与错题记录</li>
+                <li>全部题目的 SM-2 记忆进度与错题记录</li>
                 <li>所有收藏夹题目与您编写的个人助记笔记</li>
                 <li>历史刷题流水、连续打卡天数与热力图数据</li>
               </ul>

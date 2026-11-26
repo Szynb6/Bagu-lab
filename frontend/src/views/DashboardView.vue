@@ -205,7 +205,7 @@ function pct(a: number, b: number) {
     <section>
       <div class="mb-3.5 flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 class="text-base font-semibold tracking-tight text-[var(--text-primary)]">九大核心模块掌握度</h2>
+          <h2 class="text-base font-semibold tracking-tight text-[var(--text-primary)]">{{ data.modules.length }} 大核心模块掌握度</h2>
           <p class="mt-0.5 text-xs text-[var(--text-secondary)]">
             共 {{ data.totalQuestions }} 道面试真题，按考频与原理图解编排
           </p>

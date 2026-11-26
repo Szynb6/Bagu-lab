@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "知识模块与通读接口", description = "九大模块篇目树与单模块沉浸通读")
+@Tag(name = "知识模块与通读接口", description = "十大模块篇目树与单模块沉浸通读")
 @RestController
 @RequestMapping("/api/modules")
 @RequiredArgsConstructor
@@ -24,7 +24,7 @@ public class ModuleController {
 
     private final KnowledgeService knowledgeService;
 
-    @Operation(summary = "获取九大模块元信息与篇目树")
+    @Operation(summary = "获取十大模块元信息与篇目树")
     @GetMapping
     public Result<List<ModuleMetaVO>> listModules() {
         return Result.ok(knowledgeService.listModules());

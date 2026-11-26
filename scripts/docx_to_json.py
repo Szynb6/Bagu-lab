@@ -34,6 +34,7 @@ MODULES = [
     ('07', '07-design-patterns', '设计模式', 'shapes'),
     ('08', '08-network', '计算机网络', 'globe'),
     ('09', '09-os', '操作系统', 'monitor'),
+    ('10', '10-ai-app', 'AI 应用开发', 'sparkles'),
 ]
 
 Q_RE = re.compile(r'^Q(\d+)\s*【\s*(P[012])[^】]*】\s*(.+)$')
@@ -242,6 +243,7 @@ class ModuleParser:
         # 1. 青绿卡片：【面试标准回答】
         if fill == 'F0F7F4' or first_txt.startswith('【面试标准回答】'):
             lines = []
+            auto_num = 0
             for p in paras:
                 pt = ptext(p)
                 if not pt or pt.startswith('【面试标准回答】'):
@@ -251,16 +253,30 @@ class ModuleParser:
                 m_pt = re.match(r'^<strong>(\d+)\.\s*([^<]+?)</strong>(.*)$', md)
                 if m_pt:
                     num, lead, rest = m_pt.group(1), m_pt.group(2).strip(), m_pt.group(3).lstrip()
+                    auto_num = max(auto_num, int(num))
                     hint_key = lead.rstrip('：:')
                     if 1 < len(hint_key) <= 30:
                         self.cur_q.setdefault('_ia_hints', []).append(hint_key)
                     lines.append(f'{num}. <strong>{lead}</strong> {rest}'.rstrip())
                 else:
-                    if lines:
-                        lines.append('')
-                    lines.append(md)
-                    if pt.startswith('核心结论'):
-                        lines.append('')
+                    # 兼容无序号粗体分点（如第 10 卷 "<strong>本质与切分机制</strong>说明..."）
+                    m_sub = re.match(r'^<strong>([^<]{2,32})</strong>\s*(.+)$', md)
+                    if m_sub and not pt.startswith(('核心结论', '加分收尾')):
+                        auto_num += 1
+                        lead = m_sub.group(1).strip()
+                        rest = m_sub.group(2).lstrip()
+                        if not lead.endswith(('：', ':')):
+                            lead = f'{lead}：'
+                        hint_key = lead.rstrip('：:')
+                        if 1 < len(hint_key) <= 30:
+                            self.cur_q.setdefault('_ia_hints', []).append(hint_key)
+                        lines.append(f'{auto_num}. <strong>{lead}</strong> {rest}'.rstrip())
+                    else:
+                        if lines:
+                            lines.append('')
+                        lines.append(md)
+                        if pt.startswith('核心结论'):
+                            lines.append('')
             if lines:
                 self.add(':::interview\n' + '\n'.join(lines) + '\n:::')
             return True
@@ -350,7 +366,9 @@ class ModuleParser:
 
             m_q = Q_RE.match(text)
             if m_q:
-                self.new_question(f'Q{int(m_q.group(1)):02d}', m_q.group(2), m_q.group(3))
+                raw_num = m_q.group(1)
+                code = f'Q{raw_num}' if len(raw_num) >= 3 else f'Q{int(raw_num):02d}'
+                self.new_question(code, m_q.group(2), m_q.group(3))
                 continue
 
             if self.cur_q is None:
@@ -373,7 +391,7 @@ class ModuleParser:
 
             md = inline_md(el) or text
             if style is not None and style not in ('Normal', 'a'):
-                clean_h = re.sub(r'^\d+\.\s+', '', text).strip()
+                clean_h = re.sub(r'^(?:\d+\.\s+|[一二三四五六七八九十]+、\s*)', '', text).strip()
                 self.add(f'#### {text}')
                 self.cur_q['_subs'] = self.cur_q.get('_subs', []) + [clean_h]
             elif text.startswith('▸'):

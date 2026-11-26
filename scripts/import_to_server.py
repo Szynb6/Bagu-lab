@@ -25,8 +25,6 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-import psycopg
-
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / 'frontend' / 'public' / 'data'
 IMG_DIR = ROOT / 'frontend' / 'public' / 'images'
@@ -171,15 +169,16 @@ class SimpleS3Client:
         return 500
 
 
-def upload_images(endpoint: str, bucket: str, access_key: str, secret_key: str) -> int:
+def upload_images(endpoint: str, bucket: str, access_key: str, secret_key: str, img_dir: Path = IMG_DIR, slug: str = '') -> int:
     s3 = SimpleS3Client(endpoint, access_key, secret_key)
-    files = sorted(p for p in IMG_DIR.rglob('*') if p.is_file())
+    scan_dir = (img_dir / slug) if slug else img_dir
+    files = sorted(p for p in scan_dir.rglob('*') if p.is_file())
     if not files:
-        raise RuntimeError(f'未在 {IMG_DIR} 找到待上传图片')
+        raise RuntimeError(f'未在 {scan_dir} 找到待上传图片')
 
     uploaded = 0
     for f in files:
-        rel = f.relative_to(IMG_DIR).as_posix()
+        rel = f.relative_to(img_dir).as_posix()
         mime, _ = mimetypes.guess_type(f.name)
         status = s3.put_object(bucket, rel, f.read_bytes(), mime or 'application/octet-stream')
         if status not in (200, 201, 204):
@@ -187,7 +186,7 @@ def upload_images(endpoint: str, bucket: str, access_key: str, secret_key: str) 
         uploaded += 1
 
     # 抽检第一张图片是否支持匿名公开读
-    sample_rel = files[0].relative_to(IMG_DIR).as_posix()
+    sample_rel = files[0].relative_to(img_dir).as_posix()
     sample_url = f'{endpoint.rstrip("/")}/{bucket}/{sample_rel}'
     with urllib.request.urlopen(sample_url, timeout=10) as resp:
         assert resp.status == 200 and len(resp.read()) == files[0].stat().st_size, '匿名读校验失败'
@@ -196,6 +195,7 @@ def upload_images(endpoint: str, bucket: str, access_key: str, secret_key: str) 
 
 
 def import_postgres(host: str, port: int, dbname: str, user: str, password: str):
+    import psycopg
     modules = json.loads((DATA_DIR / 'modules.json').read_text(encoding='utf-8'))
 
     with psycopg.connect(host=host, port=port, dbname=dbname, user=user, password=password) as conn:
@@ -297,8 +297,11 @@ def import_postgres(host: str, port: int, dbname: str, user: str, password: str)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='导入 9 份八股题库至 PG17 与 RustFS')
+    parser = argparse.ArgumentParser(description='导入八股题库至 PG17 与 RustFS')
     parser.add_argument('--reparse', action='store_true', help='先重新运行 docx_to_json.py 解析 Word')
+    parser.add_argument('--images-only', action='store_true', help='仅上传原理图至 RustFS，不写入 PostgreSQL')
+    parser.add_argument('--img-dir', default=str(IMG_DIR), help='本地图片根目录（默认 frontend/public/images）')
+    parser.add_argument('--slug', default='', help='仅上传指定模块 slug 下的图片（如 10-ai-app）')
     parser.add_argument('--ssh-host', default='', help='若未手动开 SSH 隧道，可传服务器 IP 自动建隧道')
     parser.add_argument('--ssh-user', default='root')
     parser.add_argument('--ssh-port', type=int, default=22)
@@ -316,8 +319,8 @@ def main():
     db_pass = os.getenv('DB_PASSWORD')
     s3_ak = os.getenv('RUSTFS_ACCESS_KEY')
     s3_sk = os.getenv('RUSTFS_SECRET_KEY')
-    if not db_pass or not s3_ak or not s3_sk:
-        sys.exit('请通过环境变量提供 DB_PASSWORD、RUSTFS_ACCESS_KEY、RUSTFS_SECRET_KEY')
+    if not s3_ak or not s3_sk or (not args.images_only and not db_pass):
+        sys.exit('请通过环境变量提供 DB_PASSWORD（非 --images-only 时）、RUSTFS_ACCESS_KEY、RUSTFS_SECRET_KEY')
 
     tunnel = None
     try:
@@ -327,14 +330,17 @@ def main():
             ssh_pass = os.getenv('SSH_PASSWORD')
             if not ssh_pass:
                 sys.exit('使用 --ssh-host 时请通过环境变量提供 SSH_PASSWORD')
-            tunnel = SshTunnel(args.ssh_host, args.ssh_port, args.ssh_user, ssh_pass, [(0, 5432), (0, 9000)])
-            db_host = '127.0.0.1'
-            db_port = tunnel.local_ports[5432]
+            forwards = [(0, 9000)] if args.images_only else [(0, 5432), (0, 9000)]
+            tunnel = SshTunnel(args.ssh_host, args.ssh_port, args.ssh_user, ssh_pass, forwards)
+            if 5432 in tunnel.local_ports:
+                db_host = '127.0.0.1'
+                db_port = tunnel.local_ports[5432]
             s3_endpoint = f'http://127.0.0.1:{tunnel.local_ports[9000]}'
-            print(f'[SSH] 临时隧道就绪: PG -> {db_port}, RustFS -> {tunnel.local_ports[9000]}')
+            print(f'[SSH] 临时隧道就绪: RustFS -> {tunnel.local_ports[9000]}')
 
-        upload_images(s3_endpoint, args.rustfs_bucket, s3_ak, s3_sk)
-        import_postgres(db_host, db_port, args.db_name, args.db_user, db_pass)
+        upload_images(s3_endpoint, args.rustfs_bucket, s3_ak, s3_sk, img_dir=Path(args.img_dir), slug=args.slug)
+        if not args.images_only:
+            import_postgres(db_host, db_port, args.db_name, args.db_user, db_pass)
     finally:
         if tunnel:
             tunnel.close()

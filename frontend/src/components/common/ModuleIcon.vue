@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BookOpen, Coffee, Cpu, Database, GitBranch, Globe, Leaf, Monitor, Shapes, Zap } from 'lucide-vue-next'
+import { BookOpen, Coffee, Cpu, Database, GitBranch, Globe, Leaf, Monitor, Shapes, Sparkles, Zap } from 'lucide-vue-next'
 
 const props = defineProps<{
   icon: string
@@ -19,6 +19,7 @@ const icons = {
   shapes: Shapes,
   globe: Globe,
   monitor: Monitor,
+  sparkles: Sparkles,
 }
 
 const codeNum = computed(() => {
